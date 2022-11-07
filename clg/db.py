@@ -1,11 +1,12 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from urllib.parse import quote_plus
 from flask_sqlalchemy import SQLAlchemy
+import json
 
 db = SQLAlchemy()
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqldb://root:%s@localhost/college' % quote_plus('Gowtham@2543')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqldb://root:%s@localhost/college' % quote_plus('password')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
@@ -29,23 +30,54 @@ class Student(db.Model):
 	__tablename__ = "student"
 
 	id = db.Column(db.Integer, primary_key = True)
-	name = db.Column(db.String(100))
-	dep_id = db.Column(db.Integer, db.ForeignKey("department.id"))
+	stud_name = db.Column(db.String(100), primary_key = True)
+	dept_id = db.Column(db.Integer, db.ForeignKey("department.id"))
 
 	department = db.relationship("Department", back_populates="student")
 
-	def __init__(self, name, dep_id):
+	def __init__(self, name, dept_id):
 		self.name = name
-		self.dep_id = dep_id
+		self.dept_id = dept_id
+
 
 @app.route("/")
-def hello():
-	return "hello"
+def root():
+	return "Welcome to College Management System"
 
-@app.route("/insert", methods = ['POST', 'GET'])
-def insert():
+
+@app.route("/department/insert", methods = ['POST', 'GET'])
+def dept_insert():
 	data = request.get_json()
-	record = Student(data["name"])
-	db.session.add(record)
-	db.session.commit()
-	return "Inserted Successfully"
+	response = {}
+	if "name" in data:
+		# Check whether the data is already present. If presesnt ignore
+		if bool(db.session.query(Department).filter_by(dept_name = data["name"]).first()) is False:
+			if "budget" in data:
+				record = Department(data["name"], data["budget"])
+			# No need for budget to be inserted immediately
+			else:
+				record = Department(data["name"], 0)
+			db.session.add(record)
+			db.session.commit()
+			response["status"] = "Inserted Successfully"
+		else:
+			response["status"] = "Department already exists"
+	else:
+		response["status"] = "Failed to Insert. Invalid attributes"
+	return jsonify(response)
+
+
+@app.route("/department/select", methods = ['POST', 'GET'])
+def dept_select():
+	data = request.get_json()
+	response = {}
+	if "attribute" in data and "value" in data:
+		if hasaatr(Department, data["attribute"]) is True:
+			query = db.session.query(Department).filter(getattr(Department, data["attribute"]) == data["value"]).first()
+			response["name"] = query.dept_name
+			response["budget"] = query.budget
+		else:
+			response["status"] = "Attribute Not Found"
+	else:
+		response["status"] = "No attributes or values"
+	return response
