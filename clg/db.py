@@ -5,6 +5,8 @@ import json
 
 db = SQLAlchemy()
 
+#Test
+
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqldb://root:%s@localhost/college' % quote_plus('password')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
