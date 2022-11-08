@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from urllib.parse import quote_plus
 from flask_sqlalchemy import SQLAlchemy
+from clg.validate import Validate
 import json
 
 db = SQLAlchemy()
@@ -51,35 +52,64 @@ def root():
 def dept_insert():
 	data = request.get_json()
 	response = {}
-	if "name" in data:
+	if Validate.validateJson(data, ["name"]):
+
 		# Check whether the data is already present. If presesnt ignore
-		if bool(db.session.query(Department).filter_by(dept_name = data["name"]).first()) is False:
-			if "budget" in data:
+		if Validate.isPresent(db, Department, "dept_name", data["name"]):
+			response["status"] = "Department already exists"
+
+		else:
+
+			if Validate.validateJson(data, "budget"):
 				record = Department(data["name"], data["budget"])
+
 			# No need for budget to be inserted immediately
 			else:
 				record = Department(data["name"], 0)
+
 			db.session.add(record)
 			db.session.commit()
+
 			response["status"] = "Inserted Successfully"
-		else:
-			response["status"] = "Department already exists"
+
 	else:
-		response["status"] = "Failed to Insert. Invalid attributes"
-	return jsonify(response)
+		response["status"] = "Failed to Insert. Invalid data"
+
+	return response
 
 
 @app.route("/department/select", methods = ['POST', 'GET'])
 def dept_select():
 	data = request.get_json()
 	response = {}
-	if "attribute" in data and "value" in data:
-		if hasaatr(Department, data["attribute"]) is True:
+	if Validate.validateJson(data, ["attribute", "value"]):
+		if hasattr(Department, data["attribute"]) is True:
 			query = db.session.query(Department).filter(getattr(Department, data["attribute"]) == data["value"]).first()
-			response["name"] = query.dept_name
-			response["budget"] = query.budget
+			if query:
+				response["name"] = query.dept_name
+				response["budget"] = query.budget
+				response["status"] = "Success"
+			else:
+				response["status"] = "No data found"
 		else:
 			response["status"] = "Attribute Not Found"
 	else:
 		response["status"] = "No attributes or values"
+	return response
+
+
+@app.route("/department/update", methods = ['POST', 'GET'])
+def dept_update():
+	data = request.get_json()
+	response = {}
+	if Validate.validateJson(data, ["name", "budget"]):
+		if Validate.isPresent(db, Department, "dept_name", data["name"]):
+			query = db.session.query(Department).filter_by(dept_name = data["name"]).first()
+			query.budget = data["budget"]
+			db.session.commit()
+			response["status"] = "Updated Successfully"
+		else:
+			response["status"] = "Department does not exist"
+	else:
+		response["status"] = "Failed to update. Invalid data"
 	return response
