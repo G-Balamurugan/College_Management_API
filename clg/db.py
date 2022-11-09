@@ -2,11 +2,10 @@ from flask import Flask, request, jsonify
 from urllib.parse import quote_plus
 from flask_sqlalchemy import SQLAlchemy
 from clg.validate import Validate
+from clg.generate import Generate
 import json
 
 db = SQLAlchemy()
-
-#Test
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqldb://root:%s@localhost/college' % quote_plus('password')
@@ -83,18 +82,23 @@ def dept_select():
 	data = request.get_json()
 	response = {}
 	if Validate.validateJson(data, ["attribute", "value"]):
+
 		if hasattr(Department, data["attribute"]) is True:
-			query = db.session.query(Department).filter(getattr(Department, data["attribute"]) == data["value"]).first()
+			query = Generate.select(db, Department, data["attribute"], data["value"])
+
 			if query:
 				response["name"] = query.dept_name
 				response["budget"] = query.budget
 				response["status"] = "Success"
 			else:
 				response["status"] = "No data found"
+
 		else:
 			response["status"] = "Attribute Not Found"
+
 	else:
 		response["status"] = "No attributes or values"
+
 	return response
 
 
@@ -103,13 +107,17 @@ def dept_update():
 	data = request.get_json()
 	response = {}
 	if Validate.validateJson(data, ["name", "budget"]):
+
 		if Validate.isPresent(db, Department, "dept_name", data["name"]):
-			query = db.session.query(Department).filter_by(dept_name = data["name"]).first()
+			query = Generate.select(db, Department, "dept_name", data["name"])
 			query.budget = data["budget"]
 			db.session.commit()
 			response["status"] = "Updated Successfully"
+
 		else:
 			response["status"] = "Department does not exist"
+
 	else:
 		response["status"] = "Failed to update. Invalid data"
+
 	return response
