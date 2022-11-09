@@ -27,6 +27,9 @@ class Department(db.Model):
 		self.dept_name = dept_name
 		self.budget = budget
 
+	def as_dict(self):
+		return {c.name: str(getattr(self, c.name)) for c in self.__table__.columns}
+
 class Student(db.Model):
 
 	__tablename__ = "student"
@@ -87,9 +90,9 @@ def dept_select():
 			query = Generate.select(db, Department, data["attribute"], data["value"])
 
 			if query:
-				response["name"] = query.dept_name
-				response["budget"] = query.budget
-				response["status"] = "Success"
+				# response["name"] = query.dept_name
+				# response["budget"] = query.budget
+				response = Generate.tuples(query)
 			else:
 				response["status"] = "No data found"
 
