@@ -1,4 +1,6 @@
 def validateJson(data, dataList):
+	print(data)
+	print(dataList)
 	for i in dataList:
 		if i not in data:
 			return False

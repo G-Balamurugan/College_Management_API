@@ -17,4 +17,3 @@ def tuples(query):
 		i += 1
 	response["count"] = count(query)
 	return response
-
