@@ -1,6 +1,4 @@
 def validateJson(data, dataList):
-	print(data)
-	print(dataList)
 	for i in dataList:
 		if i not in data:
 			return False
@@ -8,4 +6,3 @@ def validateJson(data, dataList):
 
 def isPresent(db, table, attribute, value):
 	return bool(db.session.query(table).filter(getattr(table, attribute) == value).first())
-

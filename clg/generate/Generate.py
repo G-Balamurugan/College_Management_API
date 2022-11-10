@@ -12,7 +12,6 @@ def tuples(query):
 	i= 1
 	for q in query:
 		temp = "{0}".format(i)
-		print(type(q.__dict__))
 		response[temp] = q.as_dict()
 		i += 1
 	response["count"] = count(query)

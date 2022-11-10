@@ -99,7 +99,7 @@ def dept_select():
 	response = {}
 	if Validate.validateJson(data, ["attribute", "value"]):
 		# Table should contain the attribute
-		if hasattr(Department, data["attribute"]) is True:
+		if hasattr(Department, data["attribute"]):
 			query = Generate.select(db, Department, data["attribute"], data["value"])
 
 			if query: #record found
@@ -120,13 +120,18 @@ def dept_select():
 def dept_update():
 	data = request.get_json()
 	response = {}
-	if Validate.validateJson(data, ["name", "budget"]):
+	if Validate.validateJson(data, ["name", "update"]):
 
 		if Validate.isPresent(db, Department, "dept_name", data["name"]):
-			query = Generate.select(db, Department, "dept_name", data["name"])
-			query.budget = data["budget"]
-			db.session.commit()
-			response["status"] = "Updated Successfully"
+			if hasattr(Department, data["update"]) and data["update"] != "dept_name":
+				query = db.session.query(Department).filter_by(dept_name = data["name"]).first()
+				# query. = data["budget"]
+				setattr(query, data["update"], data["value"])
+				db.session.commit()
+				response["status"] = "Updated Successfully"
+			else:
+				response["status"] = "Attribute Not Found or Invalid Attribute"
+
 
 		else:
 			response["status"] = "Department does not exist"
