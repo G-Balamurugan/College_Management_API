@@ -41,6 +41,10 @@ class Student(db.Model):
 	dept_id = db.Column(db.Integer, db.ForeignKey("department.id"))
 	stud_mum = db.Column(db.String(100))
 	stud_dad = db.Column(db.String(100))
+	year = db.Column(db.Integer)
+	phone_no = db.Column(db.String(100))
+	gender = db.Column(db.String(10))
+	email = db.Column(db.String(100))
 
 
 	department = db.relationship("Department", back_populates="student")
@@ -50,10 +54,13 @@ class Student(db.Model):
 		self.dept_id = dept_id
 		self.stud_mum = stud_mum
 		self.stud_dad = stud_dad
+		self.year = year
+		self.phone_no = phone_no
+		self.gender = gender
+		self.email = email
 
 	def as_dict(self):
 		return {c.name: str(getattr(self, c.name)) for c in self.__table__.columns}
-
 
 @app.route("/")
 def root():
@@ -64,14 +71,14 @@ def root():
 def dept_insert():
 	data = request.get_json()
 	response = {}
-	if Validate.validateJson(data, ["name", "building"]):
+	if Validate.json(data, ["name", "building"]):
 
 		# Check whether the data is already present. If presesnt ignore
 		if Validate.isPresent(db, Department, "dept_name", data["name"]):
 			response["status"] = "Department already exists"
 
 		else:
-			if Validate.validateJson(data, ["budget"]):
+			if Validate.json(data, ["budget"]):
 				# Budget cannot be less than 0
 				if(data["budget"] < 0):
 					response["status"] = "Invalid budget"
@@ -97,7 +104,7 @@ def dept_insert():
 def dept_select():
 	data = request.get_json()
 	response = {}
-	if Validate.validateJson(data, ["attribute", "value"]):
+	if Validate.json(data, ["attribute", "value"]):
 		# Table should contain the attribute
 		if hasattr(Department, data["attribute"]):
 			query = Generate.select(db, Department, data["attribute"], data["value"])
@@ -120,7 +127,7 @@ def dept_select():
 def dept_update():
 	data = request.get_json()
 	response = {}
-	if Validate.validateJson(data, ["name", "update"]):
+	if Validate.json(data, ["name", "update"]):
 
 		if Validate.isPresent(db, Department, "dept_name", data["name"]):
 			if hasattr(Department, data["update"]) and data["update"] != "dept_name":
