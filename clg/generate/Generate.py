@@ -1,5 +1,8 @@
-def select(db, table, attribute, value):
+def selectAll(db, table, attribute, value):
 	return db.session.query(table).filter(getattr(table, attribute) == value).all()
+
+def selectOne(db, table, attribute, value):
+	return db.session.query(table).filter(getattr(table, attribute) == value).first()
 
 def count(query):
 	count = 0
