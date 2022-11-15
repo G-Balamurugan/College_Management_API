@@ -23,6 +23,7 @@ class Department(db.Model):
 	building = db.Column(db.String(100), nullable = False)
 
 	student = db.relationship("Student", back_populates="department")
+	faculty = db.relationship("Faculty", back_populates="department")
 
 	def __init__(self, dept_name, budget, building):
 		self.dept_name = dept_name
@@ -75,7 +76,7 @@ class Faculty(db.Model):
 	salary = db.Column(db.Integer)
 	phone_no = db.Column(db.Integer)
 
-	#department = db.relationship("Department" , back_populates="faculty")
+	department = db.relationship("Department" , back_populates="faculty")
 
 	def __init___(self, name , dept_id , qualification , designation , gender , salary ,phone_no):
 		self.facul_name = name 
