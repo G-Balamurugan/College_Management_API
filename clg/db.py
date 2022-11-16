@@ -8,7 +8,7 @@ import json
 db = SQLAlchemy()
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqldb://root:%s@localhost/college' % quote_plus('password')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqldb://root:%s@localhost/college' % quote_plus('bala')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
@@ -586,7 +586,73 @@ def course_insert(self):
 
 	return response
 
+#..............................................................................................
+@app.route("/section/select" , methods = ["POST" , "GET"])
+def section_select(self) :
+	data = request.get_json()
+	response = {}
 
+	if Validate.validateJson(data , ["attribute" , "value"]):
+
+		if hasattr(Section , data["attribute"]) :
+			query = Generate.select(db , Section , data["attribute"] , data["value"]) 
+
+			if query :
+				response = Generate.tuples(query)
+			else:
+				response["status"] = "No data found"
+		else: 
+			response["status"] = "Attribute not found "
+	
+	else:
+		response["status"] = "No attributes or values"
+
+	return response
+
+@app.route("/classroom/select" , methods = ["POST" , "GET"])
+def classroom_select(self) :
+	data = request.get_json()
+	response = {}
+
+	if Validate.validateJson(data , ["attribute" , "value"]):
+
+		if hasattr(Classroom , data["attribute"]) :
+			query = Generate.select(db , Classroom , data["attribute"] , data["value"]) 
+
+			if query :
+				response = Generate.tuples(query)
+			else:
+				response["status"] = "No data found"
+		else: 
+			response["status"] = "Attribute not found "
+	
+	else:
+		response["status"] = "No attributes or values"
+
+	return response
+
+@app.route("/teaches/select" , methods = ["POST" , "GET"])
+def teaches_select(self) :
+	data = request.get_json()
+	response = {}
+
+	if Validate.validateJson(data , ["attribute" , "value"]):
+
+		if hasattr(Teaches , data["attribute"]) :
+			query = Generate.select(db , Teaches , data["attribute"] , data["value"]) 
+
+			if query :
+				response = Generate.tuples(query)
+			else:
+				response["status"] = "No data found"
+		else: 
+			response["status"] = "Attribute not found "
+	
+	else:
+		response["status"] = "No attributes or values"
+
+	return response
+#..............................................................................................
 @app.route("/course/select" , methods = ["POST" , "GET"])
 def course_select(self) :
 	data = request.get_json()
