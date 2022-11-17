@@ -1,21 +1,13 @@
 def selectAll(db, table, attribute, value):
+	if(attribute == ""):
+		return db.session.query(table).all()
 	return db.session.query(table).filter(getattr(table, attribute) == value).all()
 
-def selectOne(db, table, attribute, value):
-	return db.session.query(table).filter(getattr(table, attribute) == value).first()
-
-def count(query):
-	count = 0
-	for i in query:
-		count += 1
-	return count
+# def selectOne(db, table, attribute, value):
+# 	return db.session.query(table).filter(getattr(table, attribute) == value).first()
 
 def tuples(query):
-	response = {}
-	i= 1
+	response = []
 	for q in query:
-		temp = "{0}".format(i)
-		response[temp] = q.as_dict()
-		i += 1
-	response["count"] = count(query)
+		response.append(q.as_dict())
 	return response

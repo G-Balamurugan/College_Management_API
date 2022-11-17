@@ -18,14 +18,15 @@ class Department(db.Model):
 	__tablename__ = "department"
 
 	id = db.Column(db.Integer, primary_key = True)
-	dept_name = db.Column(db.String(100), nullable = False)
+	dept_name = db.Column(db.String(100))
 	budget = db.Column(db.Integer)
 	building = db.Column(db.String(100), nullable = False)
 
-	student = db.relationship("Student", back_populates="department")
+	#student = db.relationship("Student", back_populates="department")
 	faculty = db.relationship("Faculty", back_populates="department")
 
-	def __init__(self, dept_name, budget, building):
+	def __init__(self, id , dept_name, budget, building):
+		self.id = id
 		self.dept_name = dept_name
 		self.budget = budget
 		self.building = building
@@ -48,9 +49,10 @@ class Student(db.Model):
 	email = db.Column(db.String(100))
 
 
-	department = db.relationship("Department", back_populates="student")
+	#department = db.relationship("Department", back_populates="student")
 
-	def __init__(self, name, dept_id, stud_mum, stud_dad, year, phone_no, gender, email):
+	def __init__(self,id, name, dept_id, stud_mum, stud_dad, year, phone_no, gender, email):
+		self.id = id
 		self.stud_name = name
 		self.dept_id = dept_id
 		self.stud_mum = stud_mum
@@ -68,18 +70,19 @@ class Faculty(db.Model):
 	__tablename__ = "faculty"
 
 	id = db.Column(db.Integer , primary_key = True)
-	facul_name = db.Column(db.String(100) , nullable = False )
+	name = db.Column(db.String(100) , nullable = False )
 	dept_id = db.Column(db.Integer , db.ForeignKey("department.id"))
 	qualification = db.Column(db.String(100))
 	designation = db.Column(db.String(100))
 	gender = db.Column(db.String(10) , nullable = False )
 	salary = db.Column(db.Integer)
-	phone_no = db.Column(db.Integer)
+	phone_no = db.Column(db.String(20))
 
 	department = db.relationship("Department" , back_populates="faculty")
 
-	def __init___(self, name , dept_id , qualification , designation , gender , salary ,phone_no):
-		self.facul_name = name 
+	def __init__(self,id, name , dept_id , qualification , designation , gender , salary ,phone_no):
+		self.id = id
+		self.name = name 
 		self.dept_id = dept_id 
 		self.qualification = qualification
 		self.designation = designation
@@ -100,7 +103,8 @@ class Course(db.Model) :
 
 	# department = db.relationship("Department" , back_populates = "course")
 
-	def __init__(self , course_name  , credits) :
+	def __init__(self , id , course_name  , credits) :
+		self.id = id
 		self.course_name = course_name 
 		self.credits = credits 
 
@@ -116,10 +120,11 @@ class Section(db.Model):
     year = db.Column(db.Integer)
     semester = db.Column(db.Integer)
 
-    def __init__(self, course_id, year, semester):
+    def __init__(self, id , course_id, year, semester):
         self.course_id = course_id
         self.year = year
         self.semester = semester
+        self.id=id
         
     def as_dict(self):
         return {c.name: str(getattr(self, c.name)) for c in self.__table__.columns}
@@ -140,7 +145,7 @@ class Mark(db.Model):
     def __init__(self , stud_id, midsem1, midsem2, assgn):
         self.stud_id = stud_id
         self.midsem1 = midsem1
-        self.midsem2 - midsem2
+        self.midsem2 = midsem2
         self.assgn = assgn
     
     def as_dict(self):
@@ -211,8 +216,8 @@ class Time_slot(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     sec_id = db.Column(db.Integer, db.ForeignKey("section.id"))
     slot = db.Column(db.Integer)
-    start_time = db.Column(db.DateTime) #888888888888888888888
-    end_time = db.Column(db.DateTime) #88888888888888888888
+    start_time = db.Column(db.DateTime) 
+    end_time = db.Column(db.DateTime) 
     day = db.Column(db.String(100), nullable = False)
     
     def __init__(self, sec_id, slot, start_time, end_time, day) -> None:
@@ -240,24 +245,24 @@ class Tutor(db.Model):
     def as_dict(self):
 	    return {c.name: str(getattr(self, c.name)) for c in self.__table__.columns}
  
-class Teaches(db.Model):
+# class Teaches(db.Model):
     
-    __tablename__ = "teaches"
+#     __tablename__ = "teaches"
     
-    id = db.Column(db.Integer, primary_key = True)
-    sec_id = db.Column(db.Integer, db.ForeignKey("section.id"))
-    course_id = db.Column(db.Integer, db.ForeignKey("course.id")) #???????????????????????????
-    semester = db.Column(db.Integer)
-    year = db.Column(db.Integer)
+#     id = db.Column(db.Integer, primary_key = True)
+#     sec_id = db.Column(db.Integer, db.ForeignKey("section.id"))
+#     course_id = db.Column(db.Integer, db.ForeignKey("course.id"))
+#     semester = db.Column(db.Integer)
+#     year = db.Column(db.Integer)
     
-    def __init__(self, sec_id, course_id, semester, year) -> None:
-        self.sec_id = sec_id
-        self.course_id = course_id
-        self.semester = semester
-        self.year = year
+#     def __init__(self, sec_id, course_id, semester, year) -> None:
+#         self.sec_id = sec_id
+#         self.course_id = course_id
+#         self.semester = semester
+#         self.year = year
     
-    def as_dict(self):
-	    return {c.name: str(getattr(self, c.name)) for c in self.__table__.columns}
+#     def as_dict(self):
+# 	    return {c.name: str(getattr(self, c.name)) for c in self.__table__.columns}
 
 class Takes(db.Model):
     
@@ -265,7 +270,7 @@ class Takes(db.Model):
     
     id = db.Column(db.Integer, primary_key = True)
     sec_id = db.Column(db.Integer, db.ForeignKey("section.id"))
-    course_id = db.Column(db.Integer, db.ForeignKey("course.id")) #???????????????????????????
+    course_id = db.Column(db.Integer, db.ForeignKey("course.id")) 
     semester = db.Column(db.Integer)
     year = db.Column(db.Integer)
     GPA = db.Column(db.Float)
@@ -289,19 +294,18 @@ def root():
 def dept_insert():
 	data = request.get_json()
 	response = {}
-	if Validate.json(data, ["name", "building"]):
+	if Validate.json(data, ["dept_id","name", "building"]):
 
 		# Check whether the data is already present. If presesnt ignore
-		if Validate.isPresent(db, Department, "dept_name", data["name"]):
+		if Validate.isPresent(db, Department, "id", data["dept_id"]) or Validate.isPresent(db, Department, "dept_name", data["name"]):
 			response["status"] = "Department already exists"
-
 		else:
 			if Validate.json(data, ["budget"]):
 				# Budget cannot be less than 0
 				if(data["budget"] < 0):
 					response["status"] = "Invalid budget"
 				else:
-					record = Department(data["name"], data["budget"], data["building"])
+					record = Department(data["dept_id"],data["name"], data["budget"], data["building"])
 
 			# No need for budget to be inserted immediately
 			else:
@@ -324,7 +328,7 @@ def dept_select():
 	response = {}
 	if Validate.json(data, ["attribute", "value"]):
 		# Table should contain the attribute
-		if hasattr(Department, data["attribute"]):
+		if hasattr(Department, data["attribute"]) or (data["attribute"]==""):
 			query = Generate.selectAll(db, Department, data["attribute"], data["value"])
 
 			if query: #record found
@@ -370,20 +374,22 @@ def dept_update():
 def stud_insert():
 	data = request.get_json()
 	response = {}
-	dataList = ["name", "dept_id", "mum", "dad", "year", "phone", "gender", "email"]
+	dataList = ["name", "id" , "dept_id", "mum", "dad", "year", "phone", "gender", "email"]
 
 	if Validate.json(data, dataList):
 		if Validate.email(data["email"]):
-			query = Generate.selectOne(db, Department, "id", data["dept_id"])
-			if query:
-				# name, dept_id, stud_mum, stud_dad, year, phone_no, gender, email
-				record = Student(data["name"], data["dept_id"], data["mum"], data["dad"], data["year"], data["phone"], 
-					data["gender"], data["email"])
-				db.session.add(record)
-				db.session.commit()
-				response["status"] = "Inserted Successfully"
-			else:
-				response["status"] = "Invalid department ID"
+			if Validate.isPresent(db, Student, "id", data["id"]):
+				response["status"] = "Student ID already exists"
+			else:		
+				query1 = Generate.selectAll(db, Department, "id", data["dept_id"])
+				if query1:
+					# name, dept_id, stud_mum, stud_dad, year, phone_no, gender, email
+					record = Student(data["id"],data["name"],data["dept_id"], data["mum"], data["dad"], data["year"], data["phone"], data["gender"], data["email"])
+					db.session.add(record)
+					db.session.commit()
+					response["status"] = "Inserted Successfully"
+				else:
+					response["status"] = "Invalid department ID"
 		else:
 			response["status"] = "Invalid Email"
 
@@ -440,84 +446,49 @@ def stud_update():
 
 	return response
 
-@app.route("/faculty/insert" , methods = ["POST" , "GET"])
-def facul_insert():
-	data = request.json()
+@app.route("/faculty/insert", methods = ['POST', 'GET'])
+def faculty_insert():
+	data = request.get_json()
 	response = {}
+	dataList = ["name","id" , "dept_id", "qualification", "designation", "gender", "phone_no"]
 
-	if Validate.validateJson(data,["name" , "id" , "dept_id" ,"qualification" , "designation" , "gender" , "phone_no"]):
-
-		#check whether the data is already present .If Present ignore 
-		if Validate.isPresent(db , Faculty , "id" , data["id"]) : 
-			response["status"] = "Faculty details inserted successfully"
-
-		else :
-
-			if ( data["name"]== " ") or (data["dept_id"] == " ") or (data["qualification"]==" ") or (data["designation"]==" ") or (data["gender"] not in ["Male" , "Female","Others"]) or (len(str(data["phone_no"])) != 10 ) :
-
-				response["status"] = "Invalid attributes" 
-			
-			else:
-				if Validate.validateJson(data , ["salary"]) :
-					#salary cannot be less than 0 
-					if (data["salary"] < 0 ) :
-						response["status"] = "Invalid salary"
-
-					else :
-						record = Faculty(data["name"] ,data["dept_id"] ,data["qualification"] , data["designation"] , data["gender"], data["salary"] ,data["phone_no"])
+	if Validate.json(data, dataList):
+		if Validate.isPresent(db, Faculty, "id", data["id"]):
+				response["status"] = "Facullty ID already exists"
+		else:
+			query = Generate.selectAll(db, Department, "id", data["dept_id"])
+			if query:
+				# name, dept_id, stud_mum, stud_dad, year, phone_no, gender, email
+				if Validate.json(data , ["salary"]):
+					if (data["salary"]<0) :
+						response["status"] = "Invalid Salary"
+					else: 
+						record = Faculty(data["id"],data["name"],data["dept_id"], data["qualification"], data["designation"], data["gender"] , data["salary"] , data["phone_no"])
+						db.session.add(record)
+						db.session.commit()
+						response["status"] = "Inserted Successfully"
 				else :
-					record = Faculty(data["name"] ,data["dept_id"] ,data["qualification"] , data["designation"] , data["gender"], 0 ,data["phone_no"])
-
-				db.session.add(record)
-				db.session.commit()
-
-				response["status"] = "Inserted Successfully"
-
+					record = Faculty(data["name"],data["dept_id"], data["qualification"], data["designation"], data["gender"] , 0, data["phone_no"])
+					db.session.add(record)
+					db.session.commit()
+					response["status"] = "Inserted Successfully"
+			else:
+				response["status"] = "Invalid department ID"
+		
 	else:
-		response["status"] = "Failed to insert. Invalid data"
-	
+		response["status"] = "Failed to Insert. Invalid data"
+
 	return response
-
-
-			# if (data["name"] == " ") :
-			# 	response["status"] = "Invalid Name"
-			# else:
-			# 	if (data["dept_id"] == " ") :
-			# 		response["status"] = "Invalid Department ID"
-			# 	else:
-			# 		if (data["qualification"] == " ") :
-			# 			response["status"] = "Invalid qualification"
-			# 		else:
-			# 			if (data["designation"] == " ") :
-			# 				response["status"] = "Inlid "
-
-			#------------------------------------------------
-			
-			
-			# if Validate.validateJson(data , ["salary"]) :
-			# 	#salary cannot be less than 0 
-			# 	if (data["salary"] < 0 ) :
-			# 		response["status"] = "Invalid salary"
-
-			# 	else :
-			# 		record = Faculty(data["name"] ,data["dept_id"] ,data["qualification"] , data["designation"] , data["gender"], data["salary"] ,data["phone_no"])
-			# else :
-			# 	record = Faculty(data["name"] ,data["dept_id"] , data["gender"], 0 ,data["phone_no"])
-
-			# db.session.add(record)
-			# db.session.commit()
-
-			# response["status"] = "Inserted Successfully"
 
 
 @app.route("/faculty/select" , methods = ["POST","GET"])
 def facul_select():
 	data = request.get_json()
 	response = {}
-	if Validate.validateJson(data , ["attribute" , "value"]) :
+	if Validate.json(data , ["attribute" , "value"]) :
 		#table should contain the attribute
 		if hasattr(Faculty , data["attribute"]) :
-			query = Generate.select(db , Faculty , data["attribute"] , data["value"])
+			query = Generate.selectAll(db , Faculty , data["attribute"] , data["value"])
 
 			if query :
 				response = Generate.tuples(query)
@@ -530,72 +501,65 @@ def facul_select():
 
 	return response
 
-@app.route("/faculty/update" , methods = ["POST","GET"])
-def facul_update():
-	data = request.get_json()
-	response = {}
+# @app.route("/faculty/update" , methods = ["POST","GET"])
+# def facul_update():
+# 	data = request.get_json()
+# 	response = {}
 
-	if Validate.validateJson(data, ["name" , "update"]):
+# 	if Validate.json(data, ["name" , "update"]):
 
-		if Validate.isPresent(db , Faculty , "id" , data["name"]):
-			if hasattr(Faculty , data["update"]) and data["update"] != "id" :
-				query = db.session.query(Faculty).filter_by(dept_name = data["name"]).first
+# 		if Validate.isPresent(db , Faculty , "id" , data["name"]):
+# 			if hasattr(Faculty , data["update"]) and data["update"] != "id" :
+# 				query = db.session.query(Faculty).filter_by(dept_name = data["name"]).first
 
-				setattr(query , data["update"] , data["value"])
-				db.session.commit()
-				response["status"] = "Updated successfully"
-			else:
-				response["status"] = "Attribute Not Found or Invalid Attribute"
-		else :
-			response["status"] = "Faculty  does not exist"
-	else:
-		response["status"] = "Failed to update. Invalid data"
+# 				setattr(query , data["update"] , data["value"])
+# 				db.session.commit()
+# 				response["status"] = "Updated successfully"
+# 			else:
+# 				response["status"] = "Attribute Not Found or Invalid Attribute"
+# 		else :
+# 			response["status"] = "Faculty  does not exist"
+# 	else:
+# 		response["status"] = "Failed to update. Invalid data"
 	
-	return response
+# 	return response
 
-
-@app.route("/course/insert" , methods = ["POST" , "GET" ])
-def course_insert(self):
+#..............................................................................................
+@app.route("/section/insert" , methods = ["POST" , "GET" ])
+def section_insert():
 	data = request.get_json()
 	response = {}
+	dataList = ["sec_id","course_id" , "year" , "semester"]
 
-	if Validate.validateJson(data , ["course_id" , "course_name" ]) : 
-		#Check whether the data is already present .If present ignore 
-		if Validate.isPresent(db, "Course" , "course_id" , data["course_id"]) :
-			response["status"] = "Course already exists"
-		
-		else:
-
-			if (data["course_id"]==" ") or (data["course_name"]==" ") :
-				response["status"] = "Invalid values"
+	if Validate.json(data, dataList):
+		query = Generate.selectAll(db, Course, "id", data["course_id"])
+		if query:
+			if Validate.isPresent(db, Section, "id", data["sec_id"]):
+				response["status"] = "Section ID already exists"
 			else:
-				if Validate.validateJson(data , ["credits"]) :
-					if (data["credits"] < 0 ):
-						response["status"] = "Invalid Budget"
-					else: 
-						record = Course(data["course_id"] , data["course_name"] , data["credits"] )
-				else: 
-					record = Course(data["course_id"] , data["course_name"] , 0 )
-
-				db.session.add(record)
-				db.session.commit()
-
-				response["status"] = "Inserted Successfully"
+				if data["semester"]>0 and data["year"] > 1950:
+					record = Section(data["sec_id"],data["course_id"],data["year"],data["semester"])
+					db.session.add(record)
+					db.session.commit()
+					response["status"] = "Inserted Successfully"
+				else:
+					response["status"] = "Invalid values"
+		else:
+			response["status"] = "Invalid Course ID"
 	else:
 		response["status"] = "Failed to Insert. Invalid data"
 
 	return response
 
-#..............................................................................................
 @app.route("/section/select" , methods = ["POST" , "GET"])
-def section_select(self) :
+def section_select() :
 	data = request.get_json()
 	response = {}
 
-	if Validate.validateJson(data , ["attribute" , "value"]):
+	if Validate.json(data , ["attribute" , "value"]):
 
 		if hasattr(Section , data["attribute"]) :
-			query = Generate.select(db , Section , data["attribute"] , data["value"]) 
+			query = Generate.selectAll(db , Section , data["attribute"] , data["value"]) 
 
 			if query :
 				response = Generate.tuples(query)
@@ -610,14 +574,14 @@ def section_select(self) :
 	return response
 
 @app.route("/classroom/select" , methods = ["POST" , "GET"])
-def classroom_select(self) :
+def classroom_select() :
 	data = request.get_json()
 	response = {}
 
-	if Validate.validateJson(data , ["attribute" , "value"]):
+	if Validate.json(data , ["attribute" , "value"]):
 
 		if hasattr(Classroom , data["attribute"]) :
-			query = Generate.select(db , Classroom , data["attribute"] , data["value"]) 
+			query = Generate.selectAll(db , Classroom , data["attribute"] , data["value"]) 
 
 			if query :
 				response = Generate.tuples(query)
@@ -631,15 +595,39 @@ def classroom_select(self) :
 
 	return response
 
-@app.route("/teaches/select" , methods = ["POST" , "GET"])
-def teaches_select(self) :
+@app.route("/tutor/insert" , methods = ["POST" , "GET" ])
+def tutor_insert():
+	data = request.get_json()
+	response = {}
+	dataList = ["stud_id" , "faculty_id"]
+
+	if Validate.json(data, dataList):
+		query1 = Generate.selectAll(db, Student, "id", data["stud_id"])
+		if query1:
+			query2 = Generate.selectAll(db, Faculty, "id", data["faculty_id"])
+			if query2:
+				record = Tutor(data["stud_id"],data["faculty_id"])
+				db.session.add(record)
+				db.session.commit()
+				response["status"] = "Inserted Successfully"
+			else:
+				response["status"] = "Invalid Faculty ID"
+		else:
+			response["status"] = "Invalid Student ID"
+	else:
+		response["status"] = "Failed to Insert. Invalid data"
+
+	return response
+
+@app.route("/tutor/select" , methods = ["POST" , "GET"])
+def tutor_select() :
 	data = request.get_json()
 	response = {}
 
-	if Validate.validateJson(data , ["attribute" , "value"]):
+	if Validate.json(data , ["attribute" , "value"]):
 
-		if hasattr(Teaches , data["attribute"]) :
-			query = Generate.select(db , Teaches , data["attribute"] , data["value"]) 
+		if hasattr(Tutor , data["attribute"]) :
+			query = Generate.selectAll(db , Tutor , data["attribute"] , data["value"]) 
 
 			if query :
 				response = Generate.tuples(query)
@@ -652,16 +640,293 @@ def teaches_select(self) :
 		response["status"] = "No attributes or values"
 
 	return response
+
+@app.route("/takes/insert" , methods = ["POST" , "GET" ])
+def takes_insert():
+	data = request.get_json()
+	response = {}
+	dataList = ["sec_id" , "course_id" , "semester" , "year" , "GPA"]
+
+	if Validate.json(data, dataList):
+		query1 = Generate.selectAll(db, Section, "id", data["sec_id"])
+		if query1:
+			query2 = Generate.selectAll(db, Course, "id", data["course_id"])
+			if query2:
+				if data["semester"]>0 and data["year"] > 1950 and data["GPA"] > -1:
+					record = Takes(data["sec_id"],data["course_id"],data["semester"],data["year"],data["GPA"])
+					db.session.add(record)
+					db.session.commit()
+					response["status"] = "Inserted Successfully"
+				else:
+					response["status"] = "Invalid values"
+			else:
+				response["status"] = "Invalid Course ID"
+		else:
+			response["status"] = "Invalid Section ID"
+	else:
+		response["status"] = "Failed to Insert. Invalid data"
+
+	return response
+
+@app.route("/takes/select" , methods = ["POST" , "GET"])
+def takes_select() :
+	data = request.get_json()
+	response = {}
+
+	if Validate.json(data , ["attribute" , "value"]):
+
+		if hasattr(Takes , data["attribute"]) :
+			query = Generate.selectAll(db , Takes , data["attribute"] , data["value"]) 
+
+			if query :
+				response = Generate.tuples(query)
+			else:
+				response["status"] = "No data found"
+		else: 
+			response["status"] = "Attribute not found "
+	else:
+		response["status"] = "No attributes or values"
+
+	return response
+
+@app.route("/time_slot/select" , methods = ["POST" , "GET"])
+def time_slot_select() :
+	data = request.get_json()
+	response = {}
+
+	if Validate.json(data , ["attribute" , "value"]):
+
+		if hasattr(Time_slot , data["attribute"]) :
+			query = Generate.selectAll(db , Time_slot , data["attribute"] , data["value"]) 
+
+			if query :
+				response = Generate.tuples(query)
+			else:
+				response["status"] = "No data found"
+		else: 
+			response["status"] = "Attribute not found "
+	
+	else:
+		response["status"] = "No attributes or values"
+
+	return response
+
+# @app.route("/teaches/insert" , methods = ["POST" , "GET" ])
+# def teaches_insert():
+# 	data = request.get_json()
+# 	response = {}
+# 	dataList = ["sec_id" , "course_id" , "semester" , "year" ]
+
+# 	if Validate.json(data, dataList):
+# 		query1 = Generate.selectAll(db, Section, "id", data["sec_id"])
+# 		if query1:
+# 			query2 = Generate.selectAll(db, Course, "id", data["course_id"])
+# 			if query2:
+# 				if data["semester"]>0 and data["year"] > 1950:
+# 					record = Teaches(data["sec_id"],data["course_id"],data["semester"],data["year"])
+# 					db.session.add(record)
+# 					db.session.commit()
+# 					response["status"] = "Inserted Successfully"
+# 				else:
+# 					response["status"] = "Invalid values"
+# 			else:
+# 				response["status"] = "Invalid Course ID"
+# 		else:
+# 			response["status"] = "Invalid Section ID"
+# 	else:
+# 		response["status"] = "Failed to Insert. Invalid data"
+
+# 	return response
+
+# @app.route("/teaches/select" , methods = ["POST" , "GET"])
+# def teaches_select() :
+# 	data = request.get_json()
+# 	response = {}
+
+# 	if Validate.json(data , ["attribute" , "value"]):
+
+# 		if hasattr(Teaches , data["attribute"]) :
+# 			query = Generate.selectAll(db , Teaches , data["attribute"] , data["value"]) 
+
+# 			if query :
+# 				response = Generate.tuples(query)
+# 			else:
+# 				response["status"] = "No data found"
+# 		else: 
+# 			response["status"] = "Attribute not found "
+	
+# 	else:
+# 		response["status"] = "No attributes or values"
+
+# 	return response
+
+@app.route("/mark/insert" , methods = ["POST" , "GET" ])
+def mark_insert():
+	data = request.get_json()
+	response = {}
+	dataList = ["stud_id" , "midsem1" , "midsem2" , "assgn" ]
+
+	if Validate.json(data, dataList):
+		query = Generate.selectAll(db, Student, "id", data["stud_id"])
+		if query:
+			if data["midsem1"] > -1 and data["midsem2"] > -1 and data["assgn"] > -1:
+				record = Mark(data["stud_id"],data["midsem1"],data["midsem2"],data["assgn"])
+				db.session.add(record)
+				db.session.commit()
+				response["status"] = "Inserted Successfully"
+			else:
+				response["status"] = "Invalid values"
+		else:
+			response["status"] = "Invalid Student ID"
+	else:
+		response["status"] = "Failed to Insert. Invalid data"
+
+	return response
+
+@app.route("/mark/select" , methods = ["POST" , "GET"])
+def mark_select() :
+	data = request.get_json()
+	response = {}
+
+	if Validate.json(data , ["attribute" , "value"]):
+
+		if hasattr(Mark , data["attribute"]) :
+			query = Generate.selectAll(db , Mark , data["attribute"] , data["value"]) 
+			if query :
+				response = Generate.tuples(query)
+			else:
+				response["status"] = "No data found"
+		else: 
+			response["status"] = "Attribute not found "
+	
+	else:
+		response["status"] = "No attributes or values"
+
+	return response
+
+@app.route("/student_attendance/insert" , methods = ["POST" , "GET" ])
+def student_attendance_insert():
+	data = request.get_json()
+	response = {}
+	dataList = ["stud_id" , "total_working_days" , "total_present" , "total_absent"]
+
+	if Validate.json(data, dataList):
+		query = Generate.selectAll(db, Student, "id", data["stud_id"])
+		if query:
+			if data["total_working_days"]>0 and data["total_present"] > -1 and data["total_absent"] > -1:
+				record = Student_attendance(data["stud_id"],data["total_working_days"],data["total_present"],data["total_absent"])
+				db.session.add(record)
+				db.session.commit()
+				response["status"] = "Inserted Successfully"
+			else:
+				response["status"] = "Invalid values"
+		else:
+			response["status"] = "Invalid Student ID"
+	else:
+		response["status"] = "Failed to Insert. Invalid data"
+
+	return response
+
+@app.route("/student_attendance/select" , methods = ["POST" , "GET"])
+def student_attendance_select() :
+	data = request.get_json()
+	response = {}
+
+	if Validate.json(data , ["attribute" , "value"]):
+
+		if hasattr(Student_attendance , data["attribute"]) :
+			query = Generate.selectAll(db , Student_attendance , data["attribute"] , data["value"]) 
+
+			if query :
+				response = Generate.tuples(query)
+			else:
+				response["status"] = "No data found"
+		else: 
+			response["status"] = "Attribute not found "
+	
+	else:
+		response["status"] = "No attributes or values"
+
+	return response
+
+@app.route("/faculty_attendance/insert" , methods = ["POST" , "GET" ])
+def faculty_attendance_insert():
+	data = request.get_json()
+	response = {}
+	dataList = ["faculty_id" , "total_working_days" , "total_present" , "total_absent"]
+
+	if Validate.json(data, dataList):
+		query = Generate.selectAll(db, Faculty, "faculty_id", data["faculty_id"])
+		if query:
+			if data["total_working_days"]>0 and data["total_present"] > -1 and data["total_absent"] > -1:
+				record = Faculty_attendance(data["faculty_id"],data["total_working_days"],data["total_present"],data["total_absent"])
+				db.session.add(record)
+				db.session.commit()
+				response["status"] = "Inserted Successfully"
+			else:
+				response["status"] = "Invalid values"
+		else:
+			response["status"] = "Invalid Faculty ID"
+	else:
+		response["status"] = "Failed to Insert. Invalid data"
+
+	return response
+
+@app.route("/faculty_attendance/select" , methods = ["POST" , "GET"])
+def faculty_attendance_select() :
+	data = request.get_json()
+	response = {}
+
+	if Validate.json(data , ["attribute" , "value"]):
+
+		if hasattr(Faculty_attendance , data["attribute"]) :
+			query = Generate.selectAll(db , Faculty_attendance , data["attribute"] , data["value"]) 
+
+			if query :
+				response = Generate.tuples(query)
+			else:
+				response["status"] = "No data found"
+		else: 
+			response["status"] = "Attribute not found "
+	
+	else:
+		response["status"] = "No attributes or values"
+
+	return response
+
 #..............................................................................................
+
+@app.route("/course/insert" , methods = ["POST" , "GET" ])
+def course_insert():
+	data = request.get_json()
+	response = {}
+	dataList = ["id","credit" , "course_name"]
+
+	if Validate.json(data, dataList):
+		if Validate.isPresent(db, Course , "course_name" , data["course_name"]) :
+			response["status"] = "Course already exists"
+		else:
+			if data["course_name"]!="" and data["credit"]>0:
+				record = Course(data["id"],data["course_name"],data["credit"])
+				db.session.add(record)
+				db.session.commit()
+				response["status"] = "Inserted Successfully"
+			else:
+				response["status"] = "Invalid values"
+	else:
+		response["status"] = "Failed to Insert. Invalid data"
+
+	return response
+
 @app.route("/course/select" , methods = ["POST" , "GET"])
-def course_select(self) :
+def course_select() :
 	data = request.get_json()
 	response = {}
 
-	if Validate.validateJson(data , ["attribute" , "value"]):
+	if Validate.json(data , ["attribute" , "value"]):
 
 		if hasattr(Course , data["attribute"]) :
-			query = Generate.select(db , Course , data["attribute"] , data["value"]) 
+			query = Generate.selectAll(db , Course , data["attribute"] , data["value"]) 
 
 			if query :
 				response = Generate.tuples(query)
@@ -680,7 +945,7 @@ def course_update(self) :
 	data = request.get_json()
 	response = {}
 
-	if Validate.validateJson(data , ["name" , "update"]) :
+	if Validate.json(data , ["name" , "update"]) :
 
 		if Validate.isPresent(db, Course , "course_name", data["name"]) :
 			if hasattr(Course , data["update"]) and data["update"]!="course_id" :
