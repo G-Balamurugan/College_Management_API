@@ -8,7 +8,7 @@ import json
 db = SQLAlchemy()
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqldb://root:%s@localhost/college' % quote_plus('bala')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqldb://root:%s@localhost/college' % quote_plus('Ish@2002')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
@@ -349,20 +349,19 @@ def dept_select():
 def dept_update():
 	data = request.get_json()
 	response = {}
-	if Validate.json(data, ["name", "update"]):
+	if Validate.json(data, ["update_attribute", "new_value", "where_attribute" , "where_value" ]):
 
-		if Validate.isPresent(db, Department, "dept_name", data["name"]):
-			if hasattr(Department, data["update"]) and data["update"] != "dept_name":
-				query = db.session.query(Department).filter_by(dept_name = data["name"]).first()
-				setattr(query, data["update"], data["value"])
+		if Validate.isPresent(db, Department, data["where_attribute"] , data["where_value"]):
+			if hasattr(Department, data["update_attribute"]) and data["where_attribute"] != "id":
+				query = db.session.query(Department).filter( getattr(Department , data["where_attribute"]) == data["where_value"]).first()
+
+				setattr(query, data["update_attribute"], data["new_value"])
 				db.session.commit()
 				response["status"] = "Updated Successfully"
 			else:
 				response["status"] = "Attribute Not Found or Invalid Attribute"
-
-
 		else:
-			response["status"] = "Department does not exist"
+			response["status"] = "Attribute does not exist"
 
 	else:
 		response["status"] = "Failed to update. Invalid data"
@@ -446,6 +445,7 @@ def stud_select():
 
 # 	return response
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 @app.route("/student/update", methods = ['POST', 'GET'])
 def stud_update():
 	data = request.get_json()
@@ -567,7 +567,7 @@ def faculty_insert():
 						db.session.commit()
 						response["status"] = "Inserted Successfully"
 				else :
-					record = Faculty(data["name"],data["dept_id"], data["qualification"], data["designation"], data["gender"] , 0, data["phone_no"])
+					record = Faculty(data["id"] , data["name"],data["dept_id"], data["qualification"], data["designation"], data["gender"] , 0, data["phone_no"])
 					db.session.add(record)
 					db.session.commit()
 					response["status"] = "Inserted Successfully"
@@ -600,28 +600,31 @@ def facul_select():
 
 	return response
 
-# @app.route("/faculty/update" , methods = ["POST","GET"])
-# def facul_update():
-# 	data = request.get_json()
-# 	response = {}
 
-# 	if Validate.json(data, ["name" , "update"]):
+@app.route("/faculty/update", methods = ['POST', 'GET'])
+def facul_update():
+	data = request.get_json()
+	response = {}
+	if Validate.json(data, ["update_attribute", "new_value", "where_attribute" , "where_value" ]):
 
-# 		if Validate.isPresent(db , Faculty , "id" , data["name"]):
-# 			if hasattr(Faculty , data["update"]) and data["update"] != "id" :
-# 				query = db.session.query(Faculty).filter_by(dept_name = data["name"]).first
+		if hasattr(Faculty, data["update_attribute"]) and data["where_attribute"] != "id":
+			if (data["update_attribute"]=="dept_id" and Validate.isPresent(db, Department, "id" , data["new_value"])) or Validate.isPresent(db, Faculty, data["where_attribute"] , data["where_value"]):
+				query = db.session.query(Faculty).filter( getattr(Faculty , data["where_attribute"]) == data["where_value"]).first()
 
-# 				setattr(query , data["update"] , data["value"])
-# 				db.session.commit()
-# 				response["status"] = "Updated successfully"
-# 			else:
-# 				response["status"] = "Attribute Not Found or Invalid Attribute"
-# 		else :
-# 			response["status"] = "Faculty  does not exist"
-# 	else:
-# 		response["status"] = "Failed to update. Invalid data"
-	
-# 	return response
+				setattr(query, data["update_attribute"], data["new_value"])
+				db.session.commit()
+				response["status"] = "Updated Successfully"
+			else:
+				response["status"] = "Attribute Not Found or Invalid Attribute"
+
+		else:
+			response["status"] = "Attribute does not exist"
+
+	else:
+		response["status"] = "Failed to update. Invalid data"
+
+	return response
+
 
 #..............................................................................................
 @app.route("/section/insert" , methods = ["POST" , "GET" ])
@@ -672,6 +675,31 @@ def section_select() :
 
 	return response
 
+
+@app.route("/section/update", methods = ['POST', 'GET'])
+def sec_update():
+	data = request.get_json()
+	response = {}
+	if Validate.json(data, ["update_attribute", "new_value", "where_attribute" , "where_value" ]):
+
+		if hasattr(Section, data["update_attribute"]) and data["where_attribute"] != "id":
+			if (data["update_attribute"]=="course_id" and Validate.isPresent(db, Course, "course_id" , data["new_value"])) or Validate.isPresent(db, Section, data["where_attribute"] , data["where_value"]):
+				query = db.session.query(Section).filter( getattr(Section , data["where_attribute"]) == data["where_value"]).first()
+
+				setattr(query, data["update_attribute"], data["new_value"])
+				db.session.commit()
+				response["status"] = "Updated Successfully"
+			else:
+				response["status"] = "Attribute Not Found or Invalid Attribute"
+		else:
+			response["status"] = "Attribute does not exist"
+
+	else:
+		response["status"] = "Failed to update. Invalid data"
+
+	return response
+
+
 @app.route("/classroom/select" , methods = ["POST" , "GET"])
 def classroom_select() :
 	data = request.get_json()
@@ -693,6 +721,30 @@ def classroom_select() :
 		response["status"] = "No attributes or values"
 
 	return response
+
+
+@app.route("/classroom/select" , methods = ["POST" , "GET"])
+def classroom_select() :
+	data = request.get_json()
+	response = {}
+
+	if Validate.json(data , ["attribute" , "value"]):
+
+		if hasattr(Classroom , data["attribute"]) :
+			query = Generate.selectAll(db , Classroom , data["attribute"] , data["value"]) 
+
+			if query :
+				response = Generate.tuples(query)
+			else:
+				response["status"] = "No data found"
+		else: 
+			response["status"] = "Attribute not found "
+	
+	else:
+		response["status"] = "No attributes or values"
+
+	return response
+
 
 @app.route("/tutor/insert" , methods = ["POST" , "GET" ])
 def tutor_insert():
@@ -810,6 +862,29 @@ def time_slot_select() :
 
 	return response
 
+@app.route("/timeslot/insert", methods = ['POST', 'GET'])
+def timeslot_insert():
+	data = request.get_json()
+	response = {}
+	dataList = ["sec_id", "slot", "start_time", "end_time" , "day"]
+
+	if Validate.json(data, dataList):
+		query = Generate.selectAll(db, Section, "id", data["sec_id"])
+		if query:
+			
+			record = Time_slot(data["sec_id"],data["slot"], data["start_time"], data["end_time"], data["day"])
+			db.session.add(record)
+			db.session.commit()
+			response["status"] = "Inserted Successfully"
+		else:
+			response["status"] = "Invalid section ID"
+		
+	else:
+		response["status"] = "Failed to Insert. Invalid data"
+
+	return response
+
+
 # @app.route("/teaches/insert" , methods = ["POST" , "GET" ])
 # def teaches_insert():
 # 	data = request.get_json()
@@ -902,6 +977,31 @@ def mark_select() :
 		response["status"] = "No attributes or values"
 
 	return response
+
+
+@app.route("/mark/update", methods = ['POST', 'GET'])
+def mark_update():
+	data = request.get_json()
+	response = {}
+	if Validate.json(data, ["update_attribute", "new_value", "where_attribute" , "where_value" ]):
+
+		if hasattr(Mark, data["update_attribute"]) and data["where_attribute"] != "id":
+			if (data["update_attribute"]=="stud_id" and Validate.isPresent(db, Student, "stud_id" , data["new_value"])) or Validate.isPresent(db, Mark, data["where_attribute"] , data["where_value"]):
+				query = db.session.query(Mark).filter( getattr(Mark , data["where_attribute"]) == data["where_value"]).first()
+
+				setattr(query, data["update_attribute"], data["new_value"])
+				db.session.commit()
+				response["status"] = "Updated Successfully"
+			else:
+				response["status"] = "Attribute Not Found or Invalid Attribute"
+		else:
+			response["status"] = "Attribute does not exist"
+
+	else:
+		response["status"] = "Failed to update. Invalid data"
+
+	return response
+
 
 @app.route("/student_attendance/insert" , methods = ["POST" , "GET" ])
 def student_attendance_insert():
