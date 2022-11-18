@@ -34,12 +34,50 @@ class Department(db.Model):
 	def as_dict(self):
 		return {c.name: str(getattr(self, c.name)) for c in self.__table__.columns}
 
+class Course(db.Model) :
+
+	__tablename__ = "course"
+
+	id = db.Column(db.Integer, primary_key = True)
+	course_name  = db.Column(db.String(100) , nullable = False)
+	credits = db.Column(db.Float)
+
+	# department = db.relationship("Department" , back_populates = "course")
+
+	def __init__(self , id , course_name  , credits) :
+		self.id = id
+		self.course_name = course_name 
+		self.credits = credits 
+
+	def as_dict(self) :
+		return {c.name : str(getattr(self,c.name)) for c in self.__table__.columns}
+
+class Section(db.Model):
+    
+    __tablename__ = "section"
+
+    id = db.Column(db.Integer, primary_key = True)
+    course_id = db.Column(db.Integer, db.ForeignKey("course.id"))
+    year = db.Column(db.Integer)
+    semester = db.Column(db.Integer)
+
+    def __init__(self, id , course_id, year, semester):
+        self.course_id = course_id
+        self.year = year
+        self.semester = semester
+        self.id=id
+        
+    def as_dict(self):
+        return {c.name: str(getattr(self, c.name)) for c in self.__table__.columns}
+    
+
 class Student(db.Model):
 
 	__tablename__ = "student"
 
 	id = db.Column(db.Integer, primary_key = True)
 	stud_name = db.Column(db.String(100))
+	sec_id = db.Column(db.Integer, db.ForeignKey("section.id"))
 	dept_id = db.Column(db.Integer, db.ForeignKey("department.id"))
 	stud_mum = db.Column(db.String(100))
 	stud_dad = db.Column(db.String(100))
@@ -51,9 +89,10 @@ class Student(db.Model):
 
 	#department = db.relationship("Department", back_populates="student")
 
-	def __init__(self,id, name, dept_id, stud_mum, stud_dad, year, phone_no, gender, email):
+	def __init__(self,id, name, dept_id, sec_id, stud_mum, stud_dad, year, phone_no, gender, email):
 		self.id = id
 		self.stud_name = name
+		self.sec_id = sec_id
 		self.dept_id = dept_id
 		self.stud_mum = stud_mum
 		self.stud_dad = stud_dad
@@ -93,42 +132,7 @@ class Faculty(db.Model):
 	def as_dict(self) :
 		return {c.name : str(getattr(self, c.name)) for c in self.__table__.columns}
 
-class Course(db.Model) :
 
-	__tablename__ = "course"
-
-	id = db.Column(db.Integer, primary_key = True)
-	course_name  = db.Column(db.String(100) , nullable = False)
-	credits = db.Column(db.Float)
-
-	# department = db.relationship("Department" , back_populates = "course")
-
-	def __init__(self , id , course_name  , credits) :
-		self.id = id
-		self.course_name = course_name 
-		self.credits = credits 
-
-	def as_dict(self) :
-		return {c.name : str(getattr(self,c.name)) for c in self.__table__.columns}
-
-class Section(db.Model):
-    
-    __tablename__ = "section"
-
-    id = db.Column(db.Integer, primary_key = True)
-    course_id = db.Column(db.Integer, db.ForeignKey("course.id"))
-    year = db.Column(db.Integer)
-    semester = db.Column(db.Integer)
-
-    def __init__(self, id , course_id, year, semester):
-        self.course_id = course_id
-        self.year = year
-        self.semester = semester
-        self.id=id
-        
-    def as_dict(self):
-        return {c.name: str(getattr(self, c.name)) for c in self.__table__.columns}
-    
 class Mark(db.Model):
     
     __tablename__ = "mark"
@@ -269,13 +273,15 @@ class Takes(db.Model):
     __tablename__ = "takes"
     
     id = db.Column(db.Integer, primary_key = True)
+    stud_id = db.Column(db.Integer, db.ForeignKey("student.id"))
     sec_id = db.Column(db.Integer, db.ForeignKey("section.id"))
     course_id = db.Column(db.Integer, db.ForeignKey("course.id")) 
     semester = db.Column(db.Integer)
     year = db.Column(db.Integer)
     GPA = db.Column(db.Float)
     
-    def __init__(self, sec_id, course_id, semester, year, GPA) -> None:
+    def __init__(self, stud_id , sec_id, course_id, semester, year, GPA) -> None:
+        self.stud_id = stud_id
         self.sec_id = sec_id
         self.course_id = course_id
         self.semester = semester
@@ -375,7 +381,7 @@ def dept_update():
 def stud_insert():
 	data = request.get_json()
 	response = {}
-	dataList = ["name", "id" , "dept_id", "mum", "dad", "year", "phone", "gender", "email"]
+	dataList = ["name", "id" , "dept_id", "sec_id", "mum", "dad", "year", "phone", "gender", "email"]
 
 	if Validate.json(data, dataList):
 		if Validate.email(data["email"]):
@@ -384,18 +390,21 @@ def stud_insert():
 			else:		
 				query1 = Generate.selectAll(db, Department, "id", data["dept_id"])
 				if query1:
-					# name, dept_id, stud_mum, stud_dad, year, phone_no, gender, email
-					record = Student(data["id"],data["name"],data["dept_id"], data["mum"], data["dad"], data["year"], data["phone"], data["gender"], data["email"])
-					db.session.add(record)
-					db.session.commit()
-					response["status"] = "Inserted Successfully"
+					query2 = Generate.selectAll(db, Section, "id", data["sec_id"])
+					if query2:
+						# name, dept_id, stud_mum, stud_dad, year, phone_no, gender, email
+						record = Student(data["id"],data["name"],data["dept_id"],data["sec_id"], data["mum"], data["dad"], data["year"], data["phone"], data["gender"], data["email"])
+						db.session.add(record)
+						db.session.commit()
+						response["status"] = "Inserted Successfully"
+					else:
+						response["status"] = "Invalid Student ID"
 				else:
-					response["status"] = "Invalid department ID"
+					response["status"] = "Invalid Department ID"
 		else:
 			response["status"] = "Invalid Email"
-
 	else:
-		response["status"] = "Failed to Insert. Invalid data"
+		response["status"] = "Failed to Insert. Invalid Attribute"
 
 	return response
 
@@ -428,7 +437,7 @@ def stud_update():
 	response = {}
 	if Validate.json(data, ["new_value", "update_attribute", "where_attribute", "where_value"]):
 		if hasattr(Student, data["update_attribute"]) and data["update_attribute"]!="id":
-			if (data["update_attribute"]=="dept_id" and Validate.isPresent(db, Department, "id" , data["new_value"])) or Validate.isPresent(db, Student, data["where_attribute"] , data["where_value"]):
+			if (data["update_attribute"]=="stud_id" and Validate.isPresent(db, Student, "id" , data["new_value"])) or (data["update_attribute"]=="dept_id" and Validate.isPresent(db, Department, "id" , data["new_value"])) or (Validate.isPresent(db, Student, data["where_attribute"] , data["where_value"]) and data["where_attribute"]!="sec_id" and data["where_attribute"]!="dept_id"):
 				query = db.session.query(Student).filter(getattr(Student,data["where_attribute"])== data["where_value"]).first()
 				setattr(query, data["update_attribute"], data["new_value"])
 				db.session.commit()
@@ -506,9 +515,8 @@ def faculty_update():
 	if Validate.json(data, ["update_attribute", "new_value", "where_attribute" , "where_value" ]):
 
 		if hasattr(Faculty, data["update_attribute"]) and data["where_attribute"] != "id":
-			if (data["update_attribute"]=="dept_id" and Validate.isPresent(db, Department, "id" , data["new_value"])) or Validate.isPresent(db, Faculty, data["where_attribute"] , data["where_value"]):
+			if (data["update_attribute"]=="dept_id" and Validate.isPresent(db, Department, "id" , data["new_value"])) or (Validate.isPresent(db, Faculty, data["where_attribute"] , data["where_value"]) and data["where_attribute"]!="dept_id"):
 				query = db.session.query(Faculty).filter( getattr(Faculty , data["where_attribute"]) == data["where_value"]).first()
-
 				setattr(query, data["update_attribute"], data["new_value"])
 				db.session.commit()
 				response["status"] = "Updated Successfully"
@@ -581,7 +589,7 @@ def section_update():
 	if Validate.json(data, ["update_attribute", "new_value", "where_attribute" , "where_value" ]):
 
 		if hasattr(Section, data["update_attribute"]) and data["where_attribute"] != "id":
-			if (data["update_attribute"]=="course_id" and Validate.isPresent(db, Course, "course_id" , data["new_value"])) or Validate.isPresent(db, Section, data["where_attribute"] , data["where_value"]):
+			if (data["update_attribute"]=="course_id" and Validate.isPresent(db, Course, "course_id" , data["new_value"])) or (Validate.isPresent(db, Section, data["where_attribute"] , data["where_value"]) and data["where_attribute"]!="course_id"):
 				query = db.session.query(Section).filter( getattr(Section , data["where_attribute"]) == data["where_value"]).first()
 				setattr(query, data["update_attribute"], data["new_value"])
 				db.session.commit()
@@ -722,24 +730,28 @@ def tutor_update():
 def takes_insert():
 	data = request.get_json()
 	response = {}
-	dataList = ["sec_id" , "course_id" , "semester" , "year" , "GPA"]
+	dataList = [ "stud_id","sec_id" , "course_id" , "semester" , "year" , "GPA"]
 
 	if Validate.json(data, dataList):
-		query1 = Generate.selectAll(db, Section, "id", data["sec_id"])
-		if query1:
-			query2 = Generate.selectAll(db, Course, "id", data["course_id"])
-			if query2:
-				if data["semester"]>0 and data["year"] > 1950 and data["GPA"] > -1:
-					record = Takes(data["sec_id"],data["course_id"],data["semester"],data["year"],data["GPA"])
-					db.session.add(record)
-					db.session.commit()
-					response["status"] = "Inserted Successfully"
+		query = Generate.selectAll(db, Student, "id", data["stud_id"])
+		if query:
+			query1 = Generate.selectAll(db, Section, "id", data["sec_id"])
+			if query1:
+				query2 = Generate.selectAll(db, Course, "id", data["course_id"])
+				if query2:
+					if data["semester"]>0 and data["year"] > 1950 and data["GPA"] > -1:
+						record = Takes(data["stud_id"],data["sec_id"],data["course_id"],data["semester"],data["year"],data["GPA"])
+						db.session.add(record)
+						db.session.commit()
+						response["status"] = "Inserted Successfully"
+					else:
+						response["status"] = "Invalid values"
 				else:
-					response["status"] = "Invalid values"
+					response["status"] = "Invalid Course ID"
 			else:
-				response["status"] = "Invalid Course ID"
+				response["status"] = "Invalid Section ID"
 		else:
-			response["status"] = "Invalid Section ID"
+			response["status"] = "Invalid Student ID"
 	else:
 		response["status"] = "Failed to Insert. Invalid data"
 
@@ -772,7 +784,7 @@ def takes_update():
 	response = {}
 	if Validate.json(data, ["new_value", "update_attribute", "where_attribute", "where_value"]):
 		if hasattr(Takes, data["update_attribute"]) and data["update_attribute"]!="id":
-			if Validate.isPresent(db, Takes, data["where_attribute"] , data["where_value"]) or (data["update_attribute"]=="sec_id" and Validate.isPresent(db, Section, "id" , data["new_value"])) or (data["update_attribute"]=="course_id" and Validate.isPresent(db, Course, "id" , data["new_value"])):
+			if (Validate.isPresent(db, Takes, data["where_attribute"] , data["where_value"]) and data["where_attribute"]!="stud_id" and data["where_attribute"]!="course_id" and data["where_attribute"]!="sec_id") or (data["update_attribute"]=="sec_id" and Validate.isPresent(db, Section, "id" , data["new_value"])) or (data["update_attribute"]=="course_id" and Validate.isPresent(db, Course, "id" , data["new_value"])) or (data["update_attribute"]=="stud_id" and Validate.isPresent(db, Student, "id" , data["new_value"])):
 				query = db.session.query(Takes).filter(getattr(Takes,data["where_attribute"])== data["where_value"]).first()
 				setattr(query, data["update_attribute"], data["new_value"])
 				db.session.commit()
@@ -886,7 +898,7 @@ def mark_update():
 	if Validate.json(data, ["update_attribute", "new_value", "where_attribute" , "where_value" ]):
 
 		if hasattr(Mark, data["update_attribute"]) and data["where_attribute"] != "id":
-			if (data["update_attribute"]=="stud_id" and Validate.isPresent(db, Student, "stud_id" , data["new_value"])) or Validate.isPresent(db, Mark, data["where_attribute"] , data["where_value"]):
+			if (data["update_attribute"]=="stud_id" and Validate.isPresent(db, Student, "stud_id" , data["new_value"])) or (Validate.isPresent(db, Mark, data["where_attribute"] , data["where_value"]) and data["where_attribute"]!="stud_id"):
 				query = db.session.query(Mark).filter( getattr(Mark , data["where_attribute"]) == data["where_value"]).first()
 
 				setattr(query, data["update_attribute"], data["new_value"])
@@ -955,7 +967,7 @@ def student_attendance_update():
 	response = {}
 	if Validate.json(data, ["new_value", "update_attribute", "where_attribute", "where_value"]):
 		if hasattr(Student_attendance, data["update_attribute"]) and data["update_attribute"]!="id":
-			if (data["update_attribute"]=="stud_id" and Validate.isPresent(db, Student, "id" , data["new_value"])) or Validate.isPresent(db, Student_attendance, data["where_attribute"] , data["where_value"]):
+			if (data["update_attribute"]=="stud_id" and Validate.isPresent(db, Student, "id" , data["new_value"])) or (Validate.isPresent(db, Student_attendance, data["where_attribute"] , data["where_value"]) and data["where_attribute"]!="stud_id"):
 				query = db.session.query(Student_attendance).filter(getattr(Student_attendance,data["where_attribute"])== data["where_value"]).first()
 				setattr(query, data["update_attribute"], data["new_value"])
 				db.session.commit()
@@ -1021,7 +1033,7 @@ def faculty_attendance_update():
 	response = {}
 	if Validate.json(data, ["new_value", "update_attribute", "where_attribute", "where_value"]):
 		if hasattr(Faculty_attendance, data["update_attribute"]) and data["update_attribute"]!="id":
-			if (data["update_attribute"]=="faculty_id" and Validate.isPresent(db, Faculty, "id" , data["new_value"])) or Validate.isPresent(db, Faculty_attendance, data["where_attribute"] , data["where_value"]):
+			if (data["update_attribute"]=="faculty_id" and Validate.isPresent(db, Faculty, "id" , data["new_value"])) or (Validate.isPresent(db, Faculty_attendance, data["where_attribute"] , data["where_value"]) and data["where_attribute"]!="faculty_id"):
 				query = db.session.query(Faculty_attendance).filter(getattr(Faculty_attendance,data["where_attribute"])== data["where_value"]).first()
 				setattr(query, data["update_attribute"], data["new_value"])
 				db.session.commit()
@@ -1079,3 +1091,65 @@ def course_select() :
 		response["status"] = "No attributes or values"
 
 	return response
+
+
+#	ADMISSION ENTRY FOR STUDENT
+
+@app.route("/admission/insert", methods = ['POST', 'GET'])
+def admission_insert():
+	data = request.get_json()
+	response = {}
+	dataList = ["name", "id" , "dept_id", "mum", "dad", "year", "phone", "gender", "email", "sec_id" ,"course_id" , "faculty_id" , "semester" ,"year"] 
+
+	if Validate.json(data, dataList):
+		if Validate.email(data["email"]):
+			if Validate.isPresent(db, Student, "id", data["id"]):
+				response["status"] = "Student ID already exists"
+			else:		
+				query1 = Generate.selectAll(db, Department, "id", data["dept_id"])
+				query4 = Generate.selectAll(db, Course, "id", data["course_id"])
+				
+				if query1:
+					query2 = Generate.selectAll(db, Section, "id", data["sec_id"])
+					if query2:
+						# name, dept_id, stud_mum, stud_dad, year, phone_no, gender, email
+						record = Student(data["id"],data["name"],data["dept_id"],data["sec_id"], data["mum"], data["dad"], data["year"], data["phone"], data["gender"], data["email"])
+					else:
+						# Default Section is set as 1 
+						record = Student(data["id"],data["name"],data["dept_id"],1, data["mum"], data["dad"], data["year"], data["phone"], data["gender"], data["email"])
+					db.session.add(record)
+					db.session.commit()
+			
+					query3 = Generate.selectAll(db, Faculty, "id", data["faculty_id"])
+					if query3:
+						# Entry in Tutor Table	
+						record = Tutor(data["id"],data["faculty_id"])
+						db.session.add(record)
+						db.session.commit()
+
+					else:
+						response["status"] = "Inavlid Entry of Section Allocation"
+					
+					# Entry in Takes Table
+					# GPA is intialised to 0
+					record = Takes(data["id"],data["sec_id"],data["course_id"],data["semester"],data["year"],0)
+					db.session.add(record)
+					db.session.commit()
+
+					# Entry in Student_Attendance Table
+					record = Student_attendance(data["id"],100,0,0)
+					db.session.add(record)
+					db.session.commit()
+					response["status"] = "Inserted Successfully"
+
+				else:
+					response["status"] = "Invalid department Foreign Key Constraint"
+		else:
+			response["status"] = "Invalid Email"
+
+	else:
+		response["status"] = "Failed to Insert. Invalid data"
+
+	return response
+
+
