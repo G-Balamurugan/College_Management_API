@@ -7,7 +7,7 @@ import json
 from clg.models.models import db, Department, Student, Faculty, Section, Course, Tutor, Teaches, Takes, Student_attendance, Faculty_attendance, Mark, Time_slot, Classroom
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqldb://root:%s@localhost/college' % quote_plus('password')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqldb://root:%s@localhost/college' % quote_plus('bala')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
@@ -1007,11 +1007,13 @@ def hod_access():
 	response = []
 	hodQuery = Generate.selectAll(db, Faculty, "designation", "HOD")
 	for i in hodQuery:
+		lst=[]
 		facQuery = Generate.selectAll(db, Faculty, "dept_id", i.dept_id)
-		response.append(i.as_dict())
+		lst.append(i.as_dict())
 		# print(i.as_dict())
 		for j in facQuery:
 			if j.designation != "HOD":
-				response.append(j.as_dict())
+				lst.append(j.as_dict())
+		response.append(lst)
 	# response["status"] = "Invalid Email"
 	return response
