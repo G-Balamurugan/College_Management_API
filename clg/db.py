@@ -8,7 +8,7 @@ import json
 db = SQLAlchemy()
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqldb://user1:%s@localhost/college' % quote_plus('user1')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqldb://root:%s@localhost/college' % quote_plus('bala')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
@@ -270,6 +270,27 @@ class Takes(db.Model):
         self.semester = semester
         self.year = year
         self.GPA = GPA
+    
+    def as_dict(self):
+	    return {c.name: str(getattr(self, c.name)) for c in self.__table__.columns}
+
+class Teaches(db.Model):
+    
+    __tablename__ = "teaches"
+    
+    id = db.Column(db.Integer, primary_key = True)
+    faculty_id = db.Column(db.Integer , db.ForeignKey("faculty.id"))
+    sec_id = db.Column(db.Integer, db.ForeignKey("section.id"))
+    course_id = db.Column(db.Integer, db.ForeignKey("course.id"))
+    semester = db.Column(db.Integer)
+    year = db.Column(db.Integer)
+    
+    def __init__(self,faculty_id, sec_id, course_id, semester, year) -> None:
+        self.sec_id = sec_id
+        self.faculty_id = faculty_id
+        self.course_id = course_id
+        self.semester = semester
+        self.year = year
     
     def as_dict(self):
 	    return {c.name: str(getattr(self, c.name)) for c in self.__table__.columns}
@@ -637,6 +658,25 @@ def classroom_select() :
 
 	return response
 
+@app.route("/classroom/update", methods = ['POST', 'GET'])
+def classroom_update():
+	data = request.get_json()
+	response = {}
+	if Validate.json(data, ["new_value", "update_attribute", "where_attribute", "where_value"]):
+		if hasattr(Classroom, data["update_attribute"]) and (data["update_attribute"]!="id" and data["update_attribute"]!="build_no") :
+			if (data["update_attribute"]=="sec_id" and Validate.isPresent(db, Section, "id" , data["new_value"])) or (Validate.isPresent(db, Classroom, data["where_attribute"] , data["where_value"]) and data["update_attribute"]!="sec_id"):
+				query = db.session.query(Classroom).filter(getattr(Classroom,data["where_attribute"])== data["where_value"]).first()
+				setattr(query, data["update_attribute"], data["new_value"])
+				db.session.commit()
+				response["status"] = "Updated Successfully"
+			else:
+				response["status"] = "Attribute Not Found or Invalid Attribute"
+		else:
+			response["status"] = "Cannot Modify . Invalid Entry"
+	else:
+		response["status"] = "Failed to update. Invalid data"
+	return response
+
 #	TUTOR
 
 @app.route("/tutor/insert" , methods = ["POST" , "GET" ])
@@ -767,8 +807,83 @@ def takes_update():
 	response = {}
 	if Validate.json(data, ["new_value", "update_attribute", "where_attribute", "where_value"]):
 		if hasattr(Takes, data["update_attribute"]) and data["update_attribute"]!="id":
-			if (Validate.isPresent(db, Takes, data["where_attribute"] , data["where_value"]) and data["where_attribute"]!="stud_id" and data["where_attribute"]!="course_id" and data["where_attribute"]!="sec_id") or (data["update_attribute"]=="sec_id" and Validate.isPresent(db, Section, "id" , data["new_value"])) or (data["update_attribute"]=="course_id" and Validate.isPresent(db, Course, "id" , data["new_value"])) or (data["update_attribute"]=="stud_id" and Validate.isPresent(db, Student, "id" , data["new_value"])):
+			if (Validate.isPresent(db, Takes, data["where_attribute"] , data["where_value"]) and data["update_attribute"]!="stud_id" and data["update_attribute"]!="course_id" and data["update_attribute"]!="sec_id") or (data["update_attribute"]=="sec_id" and Validate.isPresent(db, Section, "id" , data["new_value"])) or (data["update_attribute"]=="course_id" and Validate.isPresent(db, Course, "id" , data["new_value"])) or (data["update_attribute"]=="stud_id" and Validate.isPresent(db, Student, "id" , data["new_value"])):
 				query = db.session.query(Takes).filter(getattr(Takes,data["where_attribute"])== data["where_value"]).first()
+				setattr(query, data["update_attribute"], data["new_value"])
+				db.session.commit()
+				response["status"] = "Updated Successfully"
+			
+			else:
+				response["status"] = "Foreign Key Constraint or Invalid Entry "
+		else:
+			response["status"] = "Cannot Modify . Invalid Entry"
+	else:
+		response["status"] = "Failed to update. Invalid data"
+	return response
+
+#	TEACHES
+
+@app.route("/teaches/insert" , methods = ["POST" , "GET" ])
+def teaches_insert():
+	data = request.get_json()
+	response = {}
+	dataList = ["faculty_id","sec_id" , "course_id" , "semester" , "year"]
+
+	if Validate.json(data, dataList):
+		query = Generate.selectAll(db, Faculty, "id", data["faculty_id"])
+		if query:
+			query1 = Generate.selectAll(db, Section, "id", data["sec_id"])
+			if query1:
+				query2 = Generate.selectAll(db, Course, "id", data["course_id"])
+				if query2:
+					if data["semester"]>0 and data["year"] > 1950:
+						record = Teaches(data["faculty_id"],data["sec_id"],data["course_id"],data["semester"],data["year"])
+						db.session.add(record)
+						db.session.commit()
+						response["status"] = "Inserted Successfully"
+					else:
+						response["status"] = "Invalid values"
+				else:
+					response["status"] = "Invalid Course ID"
+			else:
+				response["status"] = "Invalid Section ID"
+		else:
+			response["status"] = "Invalid Faculty ID"
+	else:
+		response["status"] = "Failed to Insert. Invalid data"
+
+	return response
+
+
+@app.route("/teaches/select" , methods = ["POST" , "GET"])
+def teaches_select() :
+	data = request.get_json()
+	response = {}
+
+	if Validate.json(data , ["attribute" , "value"]):
+
+		if hasattr(Teaches , data["attribute"]) or data["attribute"]=="":
+			query = Generate.selectAll(db , Teaches , data["attribute"] , data["value"]) 
+
+			if query :
+				response = Generate.tuples(query)
+			else:
+				response["status"] = "No data found"
+		else: 
+			response["status"] = "Attribute not found "
+	else:
+		response["status"] = "No attributes or values"
+
+	return response
+
+@app.route("/teaches/update", methods = ['POST', 'GET'])
+def teaches_update():
+	data = request.get_json()
+	response = {}
+	if Validate.json(data, ["new_value", "update_attribute", "where_attribute", "where_value"]):
+		if hasattr(Teaches, data["update_attribute"]) and data["update_attribute"]!="id":
+			if (Validate.isPresent(db, Teaches, data["where_attribute"] , data["where_value"]) and data["update_attribute"]!="faculty_id" and data["update_attribute"]!="course_id" and data["update_attribute"]!="sec_id") or (data["update_attribute"]=="sec_id" and Validate.isPresent(db, Section, "id" , data["new_value"])) or (data["update_attribute"]=="course_id" and Validate.isPresent(db, Course, "id" , data["new_value"])) or (data["update_attribute"]=="faculty_id" and Validate.isPresent(db, Faculty, "id" , data["new_value"])):
+				query = db.session.query(Teaches).filter(getattr(Teaches,data["where_attribute"])== data["where_value"]).first()
 				setattr(query, data["update_attribute"], data["new_value"])
 				db.session.commit()
 				response["status"] = "Updated Successfully"
@@ -825,6 +940,25 @@ def timeslot_insert():
 	else:
 		response["status"] = "Failed to Insert. Invalid data"
 
+	return response
+
+@app.route("/time_slot/update", methods = ['POST', 'GET'])
+def time_slot_update():
+	data = request.get_json()
+	response = {}
+	if Validate.json(data, ["new_value", "update_attribute", "where_attribute", "where_value"]):
+		if hasattr(Time_slot, data["update_attribute"]) and (data["update_attribute"]!="id") :
+			if (data["update_attribute"]=="sec_id" and Validate.isPresent(db, Section, "id" , data["new_value"])) or (Validate.isPresent(db, Time_slot, data["where_attribute"] , data["where_value"]) and data["update_attribute"]!="sec_id"):
+				query = db.session.query(Time_slot).filter(getattr(Time_slot,data["where_attribute"])== data["where_value"]).first()
+				setattr(query, data["update_attribute"], data["new_value"])
+				db.session.commit()
+				response["status"] = "Updated Successfully"
+			else:
+				response["status"] = "Attribute Not Found or Invalid Attribute"
+		else:
+			response["status"] = "Cannot Modify . Invalid Entry"
+	else:
+		response["status"] = "Failed to update. Invalid data"
 	return response
 
 #	MARK
@@ -1075,6 +1209,21 @@ def course_select() :
 
 	return response
 
+@app.route("/course/update", methods = ['POST', 'GET'])
+def course_update():
+	data = request.get_json()
+	response = {}
+	if Validate.json(data, ["new_value", "update_attribute", "where_attribute", "where_value"]):
+		if hasattr(Course, data["update_attribute"]) and data["update_attribute"]!="id":
+			query = db.session.query(Course).filter(getattr(Course,data["where_attribute"])== data["where_value"]).first()
+			setattr(query, data["update_attribute"], data["new_value"])
+			db.session.commit()
+			response["status"] = "Updated Successfully"
+		else:
+			response["status"] = "Cannot Modify . Invalid Entry"
+	else:
+		response["status"] = "Failed to update. Invalid data"
+	return response
 
 #	ADMISSION ENTRY FOR STUDENT
 
@@ -1135,62 +1284,3 @@ def admission_insert():
 
 	return response
 
-
-@app.route("/course/update", methods = ['POST', 'GET'])
-def course_update():
-	data = request.get_json()
-	response = {}
-	if Validate.json(data, ["new_value", "update_attribute", "where_attribute", "where_value"]):
-		if hasattr(Course, data["update_attribute"]) and data["update_attribute"]!="id":
-			query = db.session.query(Course).filter(getattr(Course,data["where_attribute"])== data["where_value"]).first()
-			setattr(query, data["update_attribute"], data["new_value"])
-			db.session.commit()
-			response["status"] = "Updated Successfully"
-		else:
-			response["status"] = "Cannot Modify . Invalid Entry"
-	else:
-		response["status"] = "Failed to update. Invalid data"
-	return response
-
-#----------------------------------------Classroom update---------------
-
-@app.route("/classroom/update", methods = ['POST', 'GET'])
-def classroom_update():
-	data = request.get_json()
-	response = {}
-	if Validate.json(data, ["new_value", "update_attribute", "where_attribute", "where_value"]):
-		if hasattr(Classroom, data["update_attribute"]) and (data["update_attribute"]!="id" and data["update_attribute"]!="build_no") :
-			if (data["update_attribute"]=="sec_id" and Validate.isPresent(db, Section, "id" , data["new_value"])) or (Validate.isPresent(db, Classroom, data["where_attribute"] , data["where_value"]) and data["update_attribute"]!="sec_id"):
-				query = db.session.query(Classroom).filter(getattr(Classroom,data["where_attribute"])== data["where_value"]).first()
-				setattr(query, data["update_attribute"], data["new_value"])
-				db.session.commit()
-				response["status"] = "Updated Successfully"
-			else:
-				response["status"] = "Attribute Not Found or Invalid Attribute"
-		else:
-			response["status"] = "Cannot Modify . Invalid Entry"
-	else:
-		response["status"] = "Failed to update. Invalid data"
-	return response
-
-
-	#------------------------------------------Time slot update
-
-@app.route("/time_slot/update", methods = ['POST', 'GET'])
-def time_slot_update():
-	data = request.get_json()
-	response = {}
-	if Validate.json(data, ["new_value", "update_attribute", "where_attribute", "where_value"]):
-		if hasattr(Time_slot, data["update_attribute"]) and (data["update_attribute"]!="id") :
-			if (data["update_attribute"]=="sec_id" and Validate.isPresent(db, Section, "id" , data["new_value"])) or (Validate.isPresent(db, Time_slot, data["where_attribute"] , data["where_value"]) and data["update_attribute"]!="sec_id"):
-				query = db.session.query(Time_slot).filter(getattr(Time_slot,data["where_attribute"])== data["where_value"]).first()
-				setattr(query, data["update_attribute"], data["new_value"])
-				db.session.commit()
-				response["status"] = "Updated Successfully"
-			else:
-				response["status"] = "Attribute Not Found or Invalid Attribute"
-		else:
-			response["status"] = "Cannot Modify . Invalid Entry"
-	else:
-		response["status"] = "Failed to update. Invalid data"
-	return response
