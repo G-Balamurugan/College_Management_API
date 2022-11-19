@@ -3,8 +3,8 @@ def selectAll(db, table, attribute, value):
 		return db.session.query(table).all()
 	return db.session.query(table).filter(getattr(table, attribute) == value).all()
 
-# def selectOne(db, table, attribute, value):
-# 	return db.session.query(table).filter(getattr(table, attribute) == value).first()
+def selectOne(db, table, attribute, value):
+	return db.session.query(table).filter(getattr(table, attribute) == value).first()
 
 def tuples(query):
 	response = []

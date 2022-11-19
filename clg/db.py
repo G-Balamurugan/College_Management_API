@@ -1017,3 +1017,21 @@ def hod_access():
 		response.append(lst)
 	# response["status"] = "Invalid Email"
 	return response
+
+@app.route("/student_details/access", methods = ['POST', 'GET'])
+def student_details_access():
+	# data = request.get_json()
+	response = []
+	stud_query = Generate.selectAll(db, Student, "", "_")
+	for i in stud_query:
+		lst=[]
+		lst.append(i.as_dict())
+		attendance_details = Generate.selectOne(db, Student_attendance, "stud_id", i.id)
+		if attendance_details:
+			lst.append(attendance_details.as_dict())
+		mark_details = Generate.selectOne(db, Mark, "stud_id", i.id)
+		if mark_details:
+			lst.append(mark_details.as_dict())
+		response.append(lst)
+
+	return response
