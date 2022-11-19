@@ -1004,13 +1004,14 @@ def admission_insert():
 @app.route("/hod/access", methods = ['POST', 'GET'])
 def hod_access():
 	# data = request.get_json()
-	response = {}
+	response = []
 	hodQuery = Generate.selectAll(db, Faculty, "designation", "HOD")
 	for i in hodQuery:
 		facQuery = Generate.selectAll(db, Faculty, "dept_id", i.dept_id)
-		print(i.as_dict())
+		response.append(i.as_dict())
+		# print(i.as_dict())
 		for j in facQuery:
 			if j.designation != "HOD":
-				print(j.as_dict())
-	response["status"] = "Invalid Email"
+				response.append(j.as_dict())
+	# response["status"] = "Invalid Email"
 	return response
