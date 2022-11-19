@@ -7,7 +7,7 @@ import json
 from clg.models.models import db, Department, Student, Faculty, Section, Course, Tutor, Teaches, Takes, Student_attendance, Faculty_attendance, Mark, Time_slot, Classroom
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqldb://root:%s@localhost/college' % quote_plus('bala')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqldb://root:%s@localhost/college' % quote_plus('password')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
@@ -177,7 +177,7 @@ def stud_update():
 def faculty_insert():
 	data = request.get_json()
 	response = {}
-	dataList = ["name","id" , "dept_id", "qualification", "designation", "gender", "phone_no"]
+	dataList = ["name", "id" , "dept_id", "qualification", "designation", "gender", "phone_no"]
 
 	if Validate.json(data, dataList):
 		if Validate.isPresent(db, Faculty, "id", data["id"]):
@@ -1003,10 +1003,14 @@ def admission_insert():
 
 @app.route("/hod/access", methods = ['POST', 'GET'])
 def hod_access():
-	data = request.get_json()
+	# data = request.get_json()
 	response = {}
-	query=Generate.selectAll(db,Faculty,"designation","HOD")
-	for i in query:
-		print(i.id)
+	hodQuery = Generate.selectAll(db, Faculty, "designation", "HOD")
+	for i in hodQuery:
+		facQuery = Generate.selectAll(db, Faculty, "dept_id", i.dept_id)
+		print(i.as_dict())
+		for j in facQuery:
+			if j.designation != "HOD":
+				print(j.as_dict())
 	response["status"] = "Invalid Email"
 	return response
