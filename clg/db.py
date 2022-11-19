@@ -7,7 +7,7 @@ import json
 from clg.models.models import db, Department, Student, Faculty, Section, Course, Tutor, Teaches, Takes, Student_attendance, Faculty_attendance, Mark, Time_slot, Classroom
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqldb://root:%s@localhost/college' % quote_plus('password')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqldb://root:%s@localhost/college' % quote_plus('bala')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
@@ -1001,3 +1001,12 @@ def admission_insert():
 
 	return response
 
+@app.route("/hod/access", methods = ['POST', 'GET'])
+def hod_access():
+	data = request.get_json()
+	response = {}
+	query=Generate.selectAll(db,Faculty,"designation","HOD")
+	for i in query:
+		print(i.id)
+	response["status"] = "Invalid Email"
+	return response
