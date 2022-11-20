@@ -1024,14 +1024,21 @@ def student_details_access():
 	response = []
 	stud_query = Generate.selectAll(db, Student, "", "_")
 	for i in stud_query:
-		lst=[]
-		lst.append(i.as_dict())
+		#print(i.id,type(i))
+		temp=i.as_dict()
+		#print(temp)
+
 		attendance_details = Generate.selectOne(db, Student_attendance, "stud_id", i.id)
 		if attendance_details:
-			lst.append(attendance_details.as_dict())
+			temp["total_working_days"] = attendance_details.total_working_days
+			temp["total_present"] = attendance_details.total_present
+			temp["total_absent"] = attendance_details.total_absent
+
 		mark_details = Generate.selectOne(db, Mark, "stud_id", i.id)
 		if mark_details:
-			lst.append(mark_details.as_dict())
-		response.append(lst)
+			temp["midsem1 mark"] = mark_details.midsem1
+			temp["midsem2 mark"] = mark_details.midsem2
+			temp["assignment"] = mark_details.assgn
+		response.append(temp)
 
 	return response
