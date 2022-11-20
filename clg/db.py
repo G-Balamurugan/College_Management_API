@@ -3,11 +3,12 @@ from urllib.parse import quote_plus
 from flask_sqlalchemy import SQLAlchemy
 from clg.validate import Validate
 from clg.generate import Generate
+from clg.lower import Lower
 import json
 from clg.models.models import db, Department, Student, Faculty, Section, Course, Tutor, Teaches, Takes, Student_attendance, Faculty_attendance, Mark, Time_slot, Classroom
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqldb://root:%s@localhost/college' % quote_plus('bala')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqldb://root:%s@localhost/college' % quote_plus('Ish@2002')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
@@ -21,6 +22,7 @@ def root():
 @app.route("/department/insert", methods = ['POST', 'GET'])
 def dept_insert():
 	data = request.get_json()
+	data = Lower.toLower(data)
 	response = {}
 	if Validate.json(data, ["dept_id","name", "building"]):
 
@@ -53,6 +55,7 @@ def dept_insert():
 @app.route("/department/select", methods = ['POST', 'GET'])
 def dept_select():
 	data = request.get_json()
+	data = Lower.toLower(data)
 	response = {}
 	if Validate.json(data, ["attribute", "value"]):
 		# Table should contain the attribute
@@ -76,6 +79,7 @@ def dept_select():
 @app.route("/department/update", methods = ['POST', 'GET'])
 def dept_update():
 	data = request.get_json()
+	data = Lower.toLower(data)
 	response = {}
 	if Validate.json(data, ["update_attribute", "new_value", "where_attribute" , "where_value" ]):
 
@@ -101,6 +105,7 @@ def dept_update():
 @app.route("/student/insert", methods = ['POST', 'GET'])
 def stud_insert():
 	data = request.get_json()
+	data = Lower.toLower(data)	
 	response = {}
 	dataList = ["name", "id" , "dept_id", "sec_id", "mum", "dad", "year", "phone", "gender", "email"]
 
@@ -133,6 +138,7 @@ def stud_insert():
 @app.route("/student/select", methods = ['POST', 'GET'])
 def stud_select():
 	data = request.get_json()
+	data = Lower.toLower(data)
 	response = {}
 	if Validate.json(data, ["attribute", "value"]):
 		# Table should contain the attribute
@@ -155,6 +161,7 @@ def stud_select():
 @app.route("/student/update", methods = ['POST', 'GET'])
 def stud_update():
 	data = request.get_json()
+	data = Lower.toLower(data)
 	response = {}
 	if Validate.json(data, ["new_value", "update_attribute", "where_attribute", "where_value"]):
 		if hasattr(Student, data["update_attribute"]) and data["update_attribute"]!="id":
@@ -176,6 +183,7 @@ def stud_update():
 @app.route("/faculty/insert", methods = ['POST', 'GET'])
 def faculty_insert():
 	data = request.get_json()
+	data = Lower.toLower(data)
 	response = {}
 	dataList = ["name", "id" , "dept_id", "qualification", "designation", "gender", "phone_no"]
 
@@ -211,6 +219,7 @@ def faculty_insert():
 @app.route("/faculty/select" , methods = ["POST","GET"])
 def faculty_select():
 	data = request.get_json()
+	data = Lower.toLower(data)
 	response = {}
 	if Validate.json(data , ["attribute" , "value"]) :
 		#table should contain the attribute
@@ -232,6 +241,7 @@ def faculty_select():
 @app.route("/faculty/update", methods = ['POST', 'GET'])
 def faculty_update():
 	data = request.get_json()
+	data = Lower.toLower(data)
 	response = {}
 	if Validate.json(data, ["update_attribute", "new_value", "where_attribute" , "where_value" ]):
 
@@ -257,6 +267,7 @@ def faculty_update():
 @app.route("/section/insert" , methods = ["POST" , "GET" ])
 def section_insert():
 	data = request.get_json()
+	data = Lower.toLower(data)
 	response = {}
 	dataList = ["sec_id","course_id" , "year" , "semester"]
 
@@ -283,6 +294,7 @@ def section_insert():
 @app.route("/section/select" , methods = ["POST" , "GET"])
 def section_select() :
 	data = request.get_json()
+	data = Lower.toLower(data)
 	response = {}
 
 	if Validate.json(data , ["attribute" , "value"]):
@@ -306,6 +318,7 @@ def section_select() :
 @app.route("/section/update", methods = ['POST', 'GET'])
 def section_update():
 	data = request.get_json()
+	data = Lower.toLower(data)
 	response = {}
 	if Validate.json(data, ["update_attribute", "new_value", "where_attribute" , "where_value" ]):
 
@@ -330,6 +343,7 @@ def section_update():
 @app.route("/classroom/insert", methods = ['POST', 'GET'])
 def classroom_insert():
 	data = request.get_json()
+	data = Lower.toLower(data)
 	response = {}
 	dataList = ["id", "sec_id", "room_no", "capacity", "build_no"]
 
@@ -356,6 +370,7 @@ def classroom_insert():
 @app.route("/classroom/select" , methods = ["POST" , "GET"])
 def classroom_select() :
 	data = request.get_json()
+	data = Lower.toLower(data)
 	response = {}
 
 	if Validate.json(data , ["attribute" , "value"]):
@@ -378,6 +393,7 @@ def classroom_select() :
 @app.route("/classroom/update", methods = ['POST', 'GET'])
 def classroom_update():
 	data = request.get_json()
+	data = Lower.toLower(data)
 	response = {}
 	if Validate.json(data, ["new_value", "update_attribute", "where_attribute", "where_value"]):
 		if hasattr(Classroom, data["update_attribute"]) and (data["update_attribute"]!="id" and data["update_attribute"]!="build_no") :
@@ -399,6 +415,7 @@ def classroom_update():
 @app.route("/tutor/insert" , methods = ["POST" , "GET" ])
 def tutor_insert():
 	data = request.get_json()
+	data = Lower.toLower(data)
 	response = {}
 	dataList = ["stud_id" , "faculty_id"]
 
@@ -423,6 +440,7 @@ def tutor_insert():
 @app.route("/tutor/select" , methods = ["POST" , "GET"])
 def tutor_select() :
 	data = request.get_json()
+	data = Lower.toLower(data)
 	response = {}
 
 	if Validate.json(data , ["attribute" , "value"]):
@@ -445,6 +463,7 @@ def tutor_select() :
 @app.route("/tutor/update", methods = ['POST', 'GET'])
 def tutor_update():
 	data = request.get_json()
+	data = Lower.toLower(data)
 	response = {}
 	if Validate.json(data, ["new_value", "update_attribute", "where_attribute", "where_value"]):
 		if hasattr(Tutor, data["update_attribute"]) and data["update_attribute"]!="id":
@@ -469,6 +488,7 @@ def tutor_update():
 @app.route("/takes/insert" , methods = ["POST" , "GET" ])
 def takes_insert():
 	data = request.get_json()
+	data = Lower.toLower(data)
 	response = {}
 	dataList = [ "stud_id","sec_id" , "course_id" , "semester" , "year" , "GPA"]
 
@@ -500,6 +520,7 @@ def takes_insert():
 @app.route("/takes/select" , methods = ["POST" , "GET"])
 def takes_select() :
 	data = request.get_json()
+	data = Lower.toLower(data)
 	response = {}
 
 	if Validate.json(data , ["attribute" , "value"]):
@@ -521,6 +542,7 @@ def takes_select() :
 @app.route("/takes/update", methods = ['POST', 'GET'])
 def takes_update():
 	data = request.get_json()
+	data = Lower.toLower(data)
 	response = {}
 	if Validate.json(data, ["new_value", "update_attribute", "where_attribute", "where_value"]):
 		if hasattr(Takes, data["update_attribute"]) and data["update_attribute"]!="id":
@@ -543,6 +565,7 @@ def takes_update():
 @app.route("/teaches/insert" , methods = ["POST" , "GET" ])
 def teaches_insert():
 	data = request.get_json()
+	data = Lower.toLower(data)
 	response = {}
 	dataList = ["faculty_id","sec_id" , "course_id" , "semester" , "year"]
 
@@ -575,6 +598,7 @@ def teaches_insert():
 @app.route("/teaches/select" , methods = ["POST" , "GET"])
 def teaches_select() :
 	data = request.get_json()
+	data = Lower.toLower(data)
 	response = {}
 
 	if Validate.json(data , ["attribute" , "value"]):
@@ -596,6 +620,7 @@ def teaches_select() :
 @app.route("/teaches/update", methods = ['POST', 'GET'])
 def teaches_update():
 	data = request.get_json()
+	data = Lower.toLower(data)
 	response = {}
 	if Validate.json(data, ["new_value", "update_attribute", "where_attribute", "where_value"]):
 		if hasattr(Teaches, data["update_attribute"]) and data["update_attribute"]!="id":
@@ -618,6 +643,7 @@ def teaches_update():
 @app.route("/time_slot/select" , methods = ["POST" , "GET"])
 def time_slot_select() :
 	data = request.get_json()
+	data = Lower.toLower(data)
 	response = {}
 
 	if Validate.json(data , ["attribute" , "value"]):
@@ -640,6 +666,7 @@ def time_slot_select() :
 @app.route("/time_slot/insert", methods = ['POST', 'GET'])
 def timeslot_insert():
 	data = request.get_json()
+	data = Lower.toLower(data)
 	response = {}
 	dataList = ["sec_id", "slot", "start_time", "end_time" , "day"]
 
@@ -662,6 +689,7 @@ def timeslot_insert():
 @app.route("/time_slot/update", methods = ['POST', 'GET'])
 def time_slot_update():
 	data = request.get_json()
+	data = Lower.toLower(data)
 	response = {}
 	if Validate.json(data, ["new_value", "update_attribute", "where_attribute", "where_value"]):
 		if hasattr(Time_slot, data["update_attribute"]) and (data["update_attribute"]!="id") :
@@ -683,6 +711,7 @@ def time_slot_update():
 @app.route("/mark/insert" , methods = ["POST" , "GET" ])
 def mark_insert():
 	data = request.get_json()
+	data = Lower.toLower(data)
 	response = {}
 	dataList = ["stud_id" , "midsem1" , "midsem2" , "assgn" ]
 
@@ -706,6 +735,7 @@ def mark_insert():
 @app.route("/mark/select" , methods = ["POST" , "GET"])
 def mark_select() :
 	data = request.get_json()
+	data = Lower.toLower(data)
 	response = {}
 
 	if Validate.json(data , ["attribute" , "value"]):
@@ -728,6 +758,7 @@ def mark_select() :
 @app.route("/mark/update", methods = ['POST', 'GET'])
 def mark_update():
 	data = request.get_json()
+	data = Lower.toLower(data)
 	response = {}
 	if Validate.json(data, ["update_attribute", "new_value", "where_attribute" , "where_value" ]):
 
@@ -753,6 +784,7 @@ def mark_update():
 @app.route("/student_attendance/insert" , methods = ["POST" , "GET" ])
 def student_attendance_insert():
 	data = request.get_json()
+	data = Lower.toLower(data)
 	response = {}
 	dataList = ["stud_id" , "total_working_days" , "total_present" , "total_absent"]
 
@@ -776,6 +808,7 @@ def student_attendance_insert():
 @app.route("/student_attendance/select" , methods = ["POST" , "GET"])
 def student_attendance_select() :
 	data = request.get_json()
+	data = Lower.toLower(data)
 	response = {}
 
 	if Validate.json(data , ["attribute" , "value"]):
@@ -798,6 +831,7 @@ def student_attendance_select() :
 @app.route("/student_attendance/update", methods = ['POST', 'GET'])
 def student_attendance_update():
 	data = request.get_json()
+	data = Lower.toLower(data)
 	response = {}
 	if Validate.json(data, ["new_value", "update_attribute", "where_attribute", "where_value"]):
 		if hasattr(Student_attendance, data["update_attribute"]) and data["update_attribute"]!="id":
@@ -819,6 +853,7 @@ def student_attendance_update():
 @app.route("/faculty_attendance/insert" , methods = ["POST" , "GET" ])
 def faculty_attendance_insert():
 	data = request.get_json()
+	data = Lower.toLower(data)
 	response = {}
 	dataList = ["faculty_id" , "total_working_days" , "total_present" , "total_absent"]
 
@@ -842,6 +877,7 @@ def faculty_attendance_insert():
 @app.route("/faculty_attendance/select" , methods = ["POST" , "GET"])
 def faculty_attendance_select() :
 	data = request.get_json()
+	data = Lower.toLower(data)
 	response = {}
 
 	if Validate.json(data , ["attribute" , "value"]):
@@ -864,6 +900,7 @@ def faculty_attendance_select() :
 @app.route("/faculty_attendance/update", methods = ['POST', 'GET'])
 def faculty_attendance_update():
 	data = request.get_json()
+	data = Lower.toLower(data)
 	response = {}
 	if Validate.json(data, ["new_value", "update_attribute", "where_attribute", "where_value"]):
 		if hasattr(Faculty_attendance, data["update_attribute"]) and data["update_attribute"]!="id":
@@ -885,6 +922,7 @@ def faculty_attendance_update():
 @app.route("/course/insert" , methods = ["POST" , "GET" ])
 def course_insert():
 	data = request.get_json()
+	data = Lower.toLower(data)
 	response = {}
 	dataList = ["id","credit" , "course_name"]
 
@@ -907,6 +945,7 @@ def course_insert():
 @app.route("/course/select" , methods = ["POST" , "GET"])
 def course_select() :
 	data = request.get_json()
+	data = Lower.toLower(data)
 	response = {}
 
 	if Validate.json(data , ["attribute" , "value"]):
@@ -929,6 +968,7 @@ def course_select() :
 @app.route("/course/update", methods = ['POST', 'GET'])
 def course_update():
 	data = request.get_json()
+	data = Lower.toLower(data)
 	response = {}
 	if Validate.json(data, ["new_value", "update_attribute", "where_attribute", "where_value"]):
 		if hasattr(Course, data["update_attribute"]) and data["update_attribute"]!="id":
@@ -947,6 +987,7 @@ def course_update():
 @app.route("/admission/insert", methods = ['POST', 'GET'])
 def admission_insert():
 	data = request.get_json()
+	data = Lower.toLower(data)
 	response = {}
 	dataList = ["name", "id" , "dept_id", "mum", "dad", "year", "phone", "gender", "email", "sec_id" ,"course_id" , "faculty_id" , "semester" ,"year"] 
 
@@ -1005,14 +1046,14 @@ def admission_insert():
 def hod_access():
 	# data = request.get_json()
 	response = []
-	hodQuery = Generate.selectAll(db, Faculty, "designation", "HOD")
+	hodQuery = Generate.selectAll(db, Faculty, "designation", "hod")
 	for i in hodQuery:
 		lst=[]
 		facQuery = Generate.selectAll(db, Faculty, "dept_id", i.dept_id)
 		lst.append(i.as_dict())
 		# print(i.as_dict())
 		for j in facQuery:
-			if j.designation != "HOD":
+			if j.designation != "hod":
 				lst.append(j.as_dict())
 		response.append(lst)
 	# response["status"] = "Invalid Email"
